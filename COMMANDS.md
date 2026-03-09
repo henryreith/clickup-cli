@@ -31,6 +31,8 @@ Complete command reference for the ClickUp CLI. Covers the full ClickUp API v2 s
 - [Custom Task Types](#custom-task-types)
 - [Shared Hierarchy](#shared-hierarchy)
 - [Docs](#docs)
+- [Schema (Introspection)](#schema-introspection)
+- [Skills (Agent Skills)](#skills-agent-skills)
 
 ---
 
@@ -1205,6 +1207,87 @@ clickup doc search --workspace-id <id> --query <text>
 ```bash
 # Search for docs mentioning "onboarding"
 clickup doc search --workspace-id 9876543 --query "onboarding"
+```
+
+---
+
+## Schema (Introspection)
+
+Discover available resources, actions, and their fields at runtime. Designed for AI agents to learn command syntax without loading full documentation.
+
+```
+clickup schema
+clickup schema <resource>
+clickup schema <resource>.<action>
+```
+
+| Command | Description |
+|---------|-------------|
+| `schema` | List all available resources (tasks, spaces, folders, ...) |
+| `schema <resource>` | List all actions for a resource (list, get, create, update, delete, ...) |
+| `schema <resource>.<action>` | Show required and optional fields with types and descriptions |
+
+**Examples**
+
+```bash
+# List all resources
+clickup schema
+
+# See what you can do with tasks
+clickup schema tasks
+
+# Get the exact fields needed to create a task
+clickup schema tasks.create
+
+# Machine-readable output for agents
+clickup schema tasks.create --format json
+```
+
+---
+
+## Skills (Agent Skills)
+
+Manage and inspect the bundled agent skills. Skills are lightweight instruction files that teach AI agents how to use the CLI with minimal token overhead.
+
+```
+clickup skill list
+clickup skill show <name>
+clickup skill show <name> --format json
+clickup skill path <name>
+```
+
+| Command | Description |
+|---------|-------------|
+| `skill list` | List all available skills (root, sub-skills, and recipes) |
+| `skill show <name>` | Output the SKILL.md content to stdout |
+| `skill show <name> --format json` | Output skill metadata (name, description, path) as JSON |
+| `skill path <name>` | Print the file system path to the skill directory |
+
+**Available skill types:**
+
+| Type | Description | Examples |
+|------|-------------|---------|
+| Root | Lightweight index of all capabilities | `clickup` |
+| Sub-skill | Per-resource command reference | `clickup-tasks`, `clickup-spaces`, `clickup-time` |
+| Recipe | Multi-step workflow guides | `clickup-weekly-review`, `clickup-sprint-planning` |
+
+**Examples**
+
+```bash
+# List all available skills
+clickup skill list
+
+# Read the root skill (the agent's starting point)
+clickup skill show clickup
+
+# Read the tasks sub-skill for detailed task command reference
+clickup skill show clickup-tasks
+
+# Get a recipe for weekly review workflow
+clickup skill show clickup-weekly-review
+
+# Find where a skill file lives on disk
+clickup skill path clickup-tasks
 ```
 
 ---

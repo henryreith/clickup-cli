@@ -15,6 +15,8 @@ Goals:
 - Sensible defaults for human use, headless-safe behavior for automation
 - Zero-dependency HTTP (Node 22 native fetch)
 - Fast cold start (no heavy framework)
+- AI-agent-native: hierarchical skills system for near-zero token overhead when used by LLM agents
+- Built-in schema introspection so agents can discover commands and fields at runtime
 
 Non-goals:
 - Real-time push (no websocket/live dashboard)
@@ -144,6 +146,47 @@ clickup-cli/
         view.json
         time-entry.json
         webhook.json
+  skills/                       # Agent skill files (bundled in npm package)
+    clickup/
+      SKILL.md                  # Root skill - lightweight index for agents
+    clickup-tasks/
+      SKILL.md                  # Tasks sub-skill
+    clickup-spaces/
+      SKILL.md                  # Spaces, folders, lists sub-skill
+    clickup-comments/
+      SKILL.md                  # Comments and communication sub-skill
+    clickup-time/
+      SKILL.md                  # Time tracking sub-skill
+    clickup-goals/
+      SKILL.md                  # Goals and key results sub-skill
+    clickup-views/
+      SKILL.md                  # Views sub-skill
+    clickup-users/
+      SKILL.md                  # Users, groups, guests, roles sub-skill
+    clickup-webhooks/
+      SKILL.md                  # Webhooks sub-skill
+    clickup-fields/
+      SKILL.md                  # Custom fields, tags, task types sub-skill
+    clickup-weekly-review/
+      SKILL.md                  # Recipe: weekly team review
+    clickup-sprint-planning/
+      SKILL.md                  # Recipe: sprint planning workflow
+    clickup-task-triage/
+      SKILL.md                  # Recipe: incoming task triage
+    clickup-standup/
+      SKILL.md                  # Recipe: daily standup report
+    clickup-sprint-closeout/
+      SKILL.md                  # Recipe: sprint closeout and retro
+    clickup-time-audit/
+      SKILL.md                  # Recipe: time tracking audit
+    clickup-project-setup/
+      SKILL.md                  # Recipe: new project scaffolding
+    clickup-capacity-check/
+      SKILL.md                  # Recipe: team capacity and workload check
+    clickup-blocker-report/
+      SKILL.md                  # Recipe: blocked tasks and dependency report
+    clickup-goal-progress/
+      SKILL.md                  # Recipe: goal and OKR progress report
 ```
 
 ### File Responsibilities
@@ -161,6 +204,10 @@ clickup-cli/
 | `src/dates.ts` | Parse human date strings to Unix ms, format Unix ms to human strings. |
 | `src/types/*.ts` | Zod schemas and inferred TypeScript types for every ClickUp resource. |
 | `src/commands/*.ts` | One file per resource group. Each exports a `register*Commands()` function. |
+| `src/commands/schema-cmd.ts` | Schema introspection: list resources, describe actions, show fields. |
+| `src/commands/skill-cmd.ts` | Skill management: list available skills, output skill content to stdout. |
+| `src/schema.ts` | Schema registry: maps resource.action to field definitions for introspection. |
+| `skills/*/SKILL.md` | Agent skill files. Root skill, sub-skills per resource, and recipe skills. |
 
 ---
 
@@ -547,7 +594,9 @@ In JSON output, preserve the raw Unix ms value from the API.
 
 ## 12. AI Agent Ergonomics
 
-Design choices that make the CLI excellent for AI coding agents:
+Design choices that make the CLI excellent for AI agents. The architecture follows the CLI-as-execution-layer, skills-as-guidance-layer pattern (see the Google Workspace CLI for prior art). The key insight: agents should not load the full API surface into context. They load a lightweight root skill, then fetch sub-skills and schemas on demand.
+
+### 12.1 Output and Behavior
 
 **1. JSON by default when not in a TTY**
 When stdout is not a TTY (piped, headless, subprocess), output defaults to JSON without needing any flags. Agents get structured data automatically.
@@ -567,7 +616,10 @@ If a required argument is missing and stdin is not a TTY, print a clear error me
 **6. Stable field names**
 JSON output uses the exact ClickUp API field names. No renaming, no camelCase conversion. What the API returns is what you get.
 
-**7. Composable patterns**
+**7. Stderr for all non-data output**
+Spinners, progress messages, warnings, and errors go to stderr. Only structured data goes to stdout. Safe to pipe without filtering noise.
+
+**8. Composable patterns**
 
 List task IDs, then get each:
 ```sh
@@ -580,8 +632,138 @@ TASK_ID=$(clickup task create --list-id abc123 --name "Fix bug" --format id)
 clickup comment create --task-id "$TASK_ID" --text "Starting work"
 ```
 
-**8. CLAUDE.md at repo root**
-A `CLAUDE.md` file at the project root describes the CLI to AI coding agents, including common patterns, command examples, and API coverage notes. See Section 17.
+### 12.2 Skills Architecture
+
+The CLI ships with a hierarchical skills system that enables AI agents to use ClickUp with near-zero token overhead. Instead of injecting the entire API surface into every LLM call (as MCP does), agents load a tiny root skill and fetch deeper context only when needed.
+
+**Three tiers:**
+
+| Tier | Purpose | Token cost | Example |
+|------|---------|------------|---------|
+| Root skill | Index and router. Tells the agent what the CLI does and how to learn more. | ~100-200 tokens | `skills/clickup/SKILL.md` |
+| Sub-skills | Per-resource command reference. Loaded on demand when the agent needs a specific resource. | ~200-500 tokens each | `skills/clickup-tasks/SKILL.md` |
+| Recipe skills | Multi-step workflow guides. Coordinate across multiple resources for common PM workflows. | ~300-600 tokens each | `skills/clickup-weekly-review/SKILL.md` |
+
+**How an agent uses the skills:**
+
+1. The root skill (`skills/clickup/SKILL.md`) lives in the agent's system prompt or is loaded at session start. It lists available sub-skills and recipes.
+2. When the agent needs to perform an action (e.g., create a task), it reads the relevant sub-skill (`skills/clickup-tasks/SKILL.md`) or runs `clickup schema tasks.create` for just-in-time field detail.
+3. For complex workflows (e.g., sprint planning), the agent reads a recipe skill that orchestrates multiple commands in sequence.
+4. The agent never needs the full API spec in context. Total token cost per action: the root skill (~150 tokens) + one sub-skill (~300 tokens) = ~450 tokens vs. thousands for a full tool schema.
+
+**Skill file format:**
+
+Every skill is a directory containing a `SKILL.md` file following the Anthropic Agent Skills standard:
+
+```markdown
+---
+name: clickup-tasks
+description: Create, update, search, and manage ClickUp tasks, subtasks, checklists, and dependencies.
+---
+
+# ClickUp Tasks
+
+[Instructions the agent follows when this skill is active]
+
+## Commands
+[Exact CLI syntax with flags]
+
+## Common Patterns
+[Recipes and examples specific to this resource]
+
+## Discovery
+[How to get more detail: `clickup schema tasks.create`, `clickup task --help`]
+```
+
+Required frontmatter fields:
+- `name`: Unique identifier (lowercase, hyphens)
+- `description`: When to use this skill (used by agent platforms for skill discovery)
+
+**Skill distribution:**
+
+Skills are both files in the repo (`skills/` directory) and bundled in the npm package. Two access paths:
+
+1. **File-based:** Agents read skill files directly from the repo or installed package location
+2. **CLI-based:** `clickup skill list` shows available skills; `clickup skill show <name>` outputs the SKILL.md content to stdout
+
+The CLI-based path means agents can discover and load skills without knowing the file system location.
+
+**Platform integration:**
+
+Agent platforms discover skills through their own conventions:
+
+| Platform | Discovery path |
+|----------|---------------|
+| Claude Code | `skills/` directory in project root (auto-discovered) |
+| Gemini CLI | Symlink or copy to `~/.gemini/skills/` |
+| Custom agents | Read `skills/clickup/SKILL.md` or run `clickup skill show clickup` |
+
+### 12.3 Schema Introspection
+
+The `clickup schema` command provides runtime introspection so agents can discover exactly what fields a command needs without loading full documentation.
+
+```
+clickup schema                           # List all resources and actions
+clickup schema tasks                     # List all task actions (list, get, create, update, delete, ...)
+clickup schema tasks.create              # Show fields for task creation
+clickup schema tasks.list                # Show available filter flags for task listing
+clickup schema tasks.create --format json  # Machine-readable field definitions
+```
+
+**Schema output for `clickup schema tasks.create`:**
+
+```
+Tasks > Create
+
+Required:
+  --list-id <id>       string    List to create the task in
+  --name <name>        string    Task name
+
+Optional:
+  --description <desc>     string    Plain text description
+  --status <s>             string    Initial status name
+  --priority <1-4>         integer   1=urgent, 2=high, 3=normal, 4=low
+  --due-date <date>        timestamp Due date
+  --start-date <date>      timestamp Start date
+  --assignee <id>...       integer[] User IDs to assign
+  --tag <name>...          string[]  Tag names to apply
+  --time-estimate <ms>     integer   Time estimate in milliseconds
+  --parent <task-id>       string    Create as subtask of this task
+  --custom-field <id=val>  string[]  Set custom field values
+```
+
+In JSON format (`--format json`), the output is a machine-readable object:
+
+```json
+{
+  "resource": "tasks",
+  "action": "create",
+  "required": [
+    { "flag": "--list-id", "type": "string", "description": "List to create the task in" },
+    { "flag": "--name", "type": "string", "description": "Task name" }
+  ],
+  "optional": [
+    { "flag": "--description", "type": "string", "description": "Plain text description" },
+    { "flag": "--priority", "type": "integer", "description": "1=urgent, 2=high, 3=normal, 4=low" }
+  ]
+}
+```
+
+The schema registry lives in `src/schema.ts` and is populated from the same Zod schemas used for validation. This keeps schema introspection and actual validation in sync.
+
+### 12.4 Relationship to ClickUp's Official MCP Server
+
+ClickUp provides an official MCP server for use with MCP-compatible clients. The CLI and skills system is a complementary approach, not a replacement:
+
+| Concern | CLI + Skills | MCP Server |
+|---------|-------------|------------|
+| Token overhead per call | Near zero (root skill + sub-skill) | Full tool schema on every turn |
+| Discovery | `clickup schema`, `--help`, skill files | Tool definitions in context |
+| Transport | Shell execution (bash) | JSON-RPC over stdio |
+| Works with | Any agent that can run shell commands | MCP-compatible hosts only |
+| Best for | Claude Code, Gemini CLI, Codex, custom agents | Claude Desktop, Cursor, VS Code |
+
+For agents running in a terminal environment (Claude Code, Gemini CLI, Codex CLI), the CLI + skills approach is strictly more token-efficient. For GUI-based MCP hosts, point users to ClickUp's official MCP server.
 
 ---
 
@@ -1023,6 +1205,40 @@ clickup config unset <key>
 clickup config path
 ```
 
+### 14.27 Schema (Introspection)
+
+```
+clickup schema                              # List all resources
+clickup schema <resource>                   # List actions for a resource
+clickup schema <resource>.<action>          # Show fields for a specific action
+clickup schema <resource>.<action> --format json  # Machine-readable field definitions
+```
+
+Examples:
+```
+clickup schema                    # Shows: tasks, spaces, folders, lists, comments, ...
+clickup schema tasks              # Shows: list, search, get, create, update, delete, ...
+clickup schema tasks.create       # Shows required and optional fields with types
+clickup schema tasks.list         # Shows available filter flags
+```
+
+### 14.28 Skill (Agent Skills)
+
+```
+clickup skill list                          # List all available skills
+clickup skill show <name>                   # Output SKILL.md content to stdout
+clickup skill show <name> --format json     # Skill metadata as JSON
+clickup skill path <name>                   # Print file path to skill directory
+```
+
+Examples:
+```
+clickup skill list                          # Shows: clickup, clickup-tasks, clickup-weekly-review, ...
+clickup skill show clickup                  # Outputs root skill content
+clickup skill show clickup-tasks            # Outputs tasks sub-skill content
+clickup skill show clickup-weekly-review    # Outputs recipe skill content
+```
+
 ---
 
 ## 15. Package Configuration
@@ -1038,7 +1254,7 @@ clickup config path
   "bin": {
     "clickup": "./dist/bin/clickup.js"
   },
-  "files": ["dist"],
+  "files": ["dist", "skills"],
   "engines": { "node": ">=22.0.0" },
   "scripts": {
     "build": "tsup",
@@ -1157,16 +1373,24 @@ The built output is ESM. CommonJS compatibility shims are not provided. Requires
 **9. Stderr for all non-data output.**
 Spinners, progress messages, warnings, and errors all go to stderr. Only structured data (table rows, JSON, IDs) goes to stdout. This makes stdout safe to pipe without filtering noise.
 
+**10. Skills over MCP for agent integration.**
+Instead of building an MCP server (ClickUp already provides one officially), the CLI ships with a hierarchical skills system that keeps agent token overhead near zero. The CLI is the execution layer; skills are the guidance layer. See Section 12.2.
+
+**11. Schema introspection over documentation.**
+Agents can discover command fields at runtime via `clickup schema <resource>.<action>` instead of needing full docs in context. The schema registry is derived from the same Zod schemas used for validation, so it is always in sync. See Section 12.3.
+
 ---
 
 ## 17. CLAUDE.md (at repo root)
 
-The `CLAUDE.md` file is a machine-readable guide for AI coding agents working in this repo. It must be present at the project root alongside `README.md`.
+The `CLAUDE.md` file is a machine-readable guide for AI coding agents **building** this project (developing the CLI itself). It describes code conventions, project structure, and how to add new commands.
+
+This is distinct from the **skills system** (Section 12.2), which guides AI agents **using** the CLI to manage ClickUp data. CLAUDE.md is for developers; skills are for users/agents.
 
 Content to include:
 
 ```markdown
-# ClickUp CLI - Agent Reference
+# ClickUp CLI - Development Reference
 
 ## What This Is
 A Node.js/TypeScript CLI for the ClickUp API v2. Binary: `clickup`.
@@ -1177,15 +1401,26 @@ A Node.js/TypeScript CLI for the ClickUp API v2. Binary: `clickup`.
 - `src/client.ts` - ClickUpClient class (HTTP, retry, rate limiting)
 - `src/config.ts` - persistent config via conf
 - `src/output.ts` - formatOutput() for all output modes
+- `src/schema.ts` - schema registry for introspection commands
 - `src/commands/*.ts` - one file per resource group
 - `src/types/*.ts` - Zod schemas and TypeScript types
+- `skills/` - agent skill files (root skill, sub-skills, recipes)
 
 ## Adding a New Command
 1. Create src/commands/my-resource.ts
 2. Export registerMyResourceCommands(program, client)
 3. Define Zod schema with .passthrough()
 4. Define COLUMNS array for table output
-5. Import and call registerMyResourceCommands() in src/cli.ts
+5. Register field definitions in src/schema.ts for schema introspection
+6. Import and call registerMyResourceCommands() in src/cli.ts
+7. Create or update the corresponding skill file in skills/
+
+## Adding a New Skill
+1. Create skills/clickup-<name>/SKILL.md
+2. Add YAML frontmatter with name and description
+3. Document commands, common patterns, and discovery hints
+4. Reference the skill from the root skill (skills/clickup/SKILL.md)
+5. Keep under 500 lines (target: 100-300 lines for sub-skills)
 
 ## Common Patterns
 - resolveWorkspaceId(opts.workspaceId) for workspace resolution

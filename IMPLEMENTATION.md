@@ -234,23 +234,67 @@ The largest and most complex resource. Take time to get this right since it sets
 - Browser launch
 - Token exchange and storage
 
-### Step 36: README.md
+### Step 36: Schema Introspection (src/commands/schema-cmd.ts + src/schema.ts)
+- Schema registry: maps resource.action to field definitions (derived from Zod schemas)
+- `clickup schema` - list all resources
+- `clickup schema <resource>` - list actions for a resource
+- `clickup schema <resource>.<action>` - show required/optional fields with types
+- JSON output for machine consumption, formatted table for humans
+- Tests: verify schema output matches actual command options
+
+### Step 37: Skill Commands (src/commands/skill-cmd.ts)
+- `clickup skill list` - list all available skills (reads skills/ directory)
+- `clickup skill show <name>` - output SKILL.md content to stdout
+- `clickup skill show <name> --format json` - output skill metadata as JSON
+- `clickup skill path <name>` - print file system path to skill directory
+- Resolve skills from bundled package location or local project directory
+- Tests: verify skill listing, content output, path resolution
+
+### Step 38: Root Skill (skills/clickup/SKILL.md)
+- Lightweight index (~150 tokens) describing what the CLI does
+- Lists all sub-skills with one-line descriptions
+- Lists all recipe skills with one-line descriptions
+- Instructions: how to discover commands, when to load sub-skills
+- Follows Anthropic Agent Skills standard (YAML frontmatter + markdown)
+
+### Step 39: Sub-Skills (skills/clickup-*/SKILL.md)
+- One sub-skill per resource group (tasks, spaces, comments, time, goals, views, users, webhooks, fields)
+- Each contains: exact command syntax, required/optional flags, common patterns, discovery hints
+- Target: 100-300 lines each, ~200-500 tokens
+- Cross-references to related sub-skills where relevant
+
+### Step 40: Recipe Skills
+- 10 recipe skills for common PM workflows:
+  - clickup-weekly-review: generate weekly team progress report
+  - clickup-sprint-planning: set up sprint with tasks from backlog
+  - clickup-task-triage: sort and prioritize incoming tasks
+  - clickup-standup: generate daily standup summary
+  - clickup-sprint-closeout: close sprint, move incomplete items, generate retro data
+  - clickup-time-audit: audit time tracking entries and utilization
+  - clickup-project-setup: scaffold new project with spaces, lists, and templates
+  - clickup-capacity-check: check team workload and availability
+  - clickup-blocker-report: find blocked tasks and dependency chains
+  - clickup-goal-progress: report on goal/OKR completion status
+- Each recipe: sequence of CLI commands with conditional logic hints
+- Target: 200-400 lines each
+
+### Step 41: README.md
 - One-line description, badges
 - Install instructions
 - Quick start (auth, list workspaces, list tasks)
 - Command reference overview (link to full docs)
 - Configuration reference
 - Output formats with examples
-- AI agent usage guide
+- AI agent usage guide (skills architecture, schema commands)
 - Contributing section
 - License
 
-### Step 37: CI/CD
+### Step 42: CI/CD
 - GitHub Actions workflow: test, typecheck, build on PR
 - Publish to npm on tag/release
 - Dependabot or renovate for dependency updates
 
-**Milestone: 100% ClickUp API v2 coverage. Ready for npm publish.**
+**Milestone: 100% ClickUp API v2 coverage. Schema introspection and agent skills system complete. Ready for npm publish.**
 
 ---
 
@@ -270,6 +314,9 @@ After each phase, verify:
 - Each command file follows the exact same pattern (see SPEC.md section 13)
 - Every API response type gets a Zod schema
 - Every resource gets column definitions for table output
+- Every resource gets field definitions registered in src/schema.ts for introspection
 - Test each command group before moving to the next
+- When adding a new command group, also create/update the corresponding sub-skill in skills/
 - Refer to COMMANDS.md for the exact flags each command needs
 - Refer to SPEC.md for architectural decisions and patterns
+- Refer to SPEC.md Section 12.2 for skills architecture and file format
