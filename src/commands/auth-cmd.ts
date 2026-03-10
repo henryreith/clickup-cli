@@ -12,12 +12,28 @@ export function registerAuthCommands(
     .command('login')
     .description('Authenticate with ClickUp')
     .option('--token <token>', 'Personal API token')
-    .action(async (opts: { token?: string }) => {
+    .option('--oauth', 'Use OAuth2 PKCE browser flow (requires CLICKUP_CLIENT_ID and CLICKUP_CLIENT_SECRET)')
+    .action(async (opts: { token?: string; oauth?: boolean }) => {
+      if (opts.oauth) {
+        const { oauthLogin } = await import('../auth.js')
+        const token = await oauthLogin()
+
+        const { ClickUpClient: ClientClass } = await import('../client.js')
+        const client = new ClientClass({ token })
+        try {
+          const userData = await client.get<{ user: { username: string; email: string } }>('/user')
+          process.stdout.write(`Authenticated as ${userData.user.username} (${userData.user.email})\n`)
+        } catch {
+          process.stderr.write('Warning: Token obtained but validation failed.\n')
+        }
+        return
+      }
+
       let token = opts.token
 
       if (!token) {
         if (!process.stdin.isTTY) {
-          process.stderr.write('Error: No token provided. Use --token <token> in non-interactive mode.\n')
+          process.stderr.write('Error: No token provided. Use --token <token> or --oauth in non-interactive mode.\n')
           process.exit(2)
           return
         }

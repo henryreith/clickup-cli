@@ -29,6 +29,9 @@ import { registerMemberCommands } from './commands/member.js'
 import { registerTemplateCommands } from './commands/template.js'
 import { registerTaskTypeCommands } from './commands/task-type.js'
 import { registerSchemaCommands } from './commands/schema-cmd.js'
+import { registerSharedHierarchyCommands } from './commands/shared-hierarchy.js'
+import { registerDocCommands } from './commands/doc.js'
+import { registerSkillCommands } from './commands/skill-cmd.js'
 
 const VERSION = '0.1.0'
 
@@ -118,7 +121,10 @@ export function run(): void {
   registerMemberCommands(program, () => createClient(program))
   registerTemplateCommands(program, () => createClient(program))
   registerTaskTypeCommands(program, () => createClient(program))
+  registerSharedHierarchyCommands(program, () => createClient(program))
+  registerDocCommands(program, () => createClient(program))
   registerSchemaCommands(program)
+  registerSkillCommands(program)
 
   program.parseAsync(process.argv).catch((error: unknown) => {
     if (error instanceof ClickUpError) {
