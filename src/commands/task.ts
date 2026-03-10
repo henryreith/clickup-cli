@@ -4,6 +4,71 @@ import { resolveWorkspaceId } from '../config.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { TaskListResponse, TaskSearchResponse, TimeInStatusResponse } from '../types/task.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('task', 'list', 'List tasks in a list', [
+  { flag: '--list-id', type: 'string', required: true, description: 'List ID' },
+  { flag: '--archived', type: 'boolean', required: false, description: 'Include archived tasks' },
+  { flag: '--include-closed', type: 'boolean', required: false, description: 'Include closed tasks' },
+  { flag: '--subtasks', type: 'boolean', required: false, description: 'Include subtasks' },
+  { flag: '--page', type: 'integer', required: false, description: 'Page number (0-indexed)' },
+  { flag: '--status', type: 'string[]', required: false, description: 'Filter by status (repeatable)' },
+  { flag: '--assignee', type: 'string[]', required: false, description: 'Filter by assignee ID (repeatable)' },
+  { flag: '--tag', type: 'string[]', required: false, description: 'Filter by tag name (repeatable)' },
+  { flag: '--order-by', type: 'string', required: false, description: 'Sort field (id|created|updated|due_date)' },
+  { flag: '--reverse', type: 'boolean', required: false, description: 'Reverse sort order' },
+])
+
+registerSchema('task', 'search', 'Search tasks across a workspace', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '--query', type: 'string', required: false, description: 'Full-text search query' },
+  { flag: '--include-closed', type: 'boolean', required: false, description: 'Include closed tasks' },
+  { flag: '--status', type: 'string[]', required: false, description: 'Filter by status (repeatable)' },
+  { flag: '--assignee', type: 'string[]', required: false, description: 'Filter by assignee ID (repeatable)' },
+  { flag: '--tag', type: 'string[]', required: false, description: 'Filter by tag name (repeatable)' },
+  { flag: '--page', type: 'integer', required: false, description: 'Page number (0-indexed)' },
+])
+
+registerSchema('task', 'get', 'Get task details', [
+  { flag: '<task-id>', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--include-subtasks', type: 'boolean', required: false, description: 'Include subtasks' },
+  { flag: '--include-markdown-description', type: 'boolean', required: false, description: 'Return description as Markdown' },
+])
+
+registerSchema('task', 'create', 'Create a new task', [
+  { flag: '--list-id', type: 'string', required: true, description: 'List ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Task name' },
+  { flag: '--description', type: 'string', required: false, description: 'Plain text description' },
+  { flag: '--markdown-description', type: 'string', required: false, description: 'Markdown description' },
+  { flag: '--status', type: 'string', required: false, description: 'Initial status' },
+  { flag: '--priority', type: 'integer', required: false, description: 'Priority (1=urgent, 2=high, 3=normal, 4=low)' },
+  { flag: '--due-date', type: 'string', required: false, description: 'Due date (Unix ms)' },
+  { flag: '--start-date', type: 'string', required: false, description: 'Start date (Unix ms)' },
+  { flag: '--assignee', type: 'string[]', required: false, description: 'Assignee user ID (repeatable)' },
+  { flag: '--tag', type: 'string[]', required: false, description: 'Tag name (repeatable)' },
+  { flag: '--time-estimate', type: 'integer', required: false, description: 'Time estimate in ms' },
+  { flag: '--parent', type: 'string', required: false, description: 'Parent task ID (creates subtask)' },
+])
+
+registerSchema('task', 'update', 'Update a task', [
+  { flag: '<task-id>', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--name', type: 'string', required: false, description: 'New task name' },
+  { flag: '--description', type: 'string', required: false, description: 'New description' },
+  { flag: '--status', type: 'string', required: false, description: 'New status' },
+  { flag: '--priority', type: 'integer', required: false, description: 'New priority (1-4)' },
+  { flag: '--due-date', type: 'string', required: false, description: 'New due date (Unix ms)' },
+  { flag: '--assignee-add', type: 'string[]', required: false, description: 'Add assignee (repeatable)' },
+  { flag: '--assignee-remove', type: 'string[]', required: false, description: 'Remove assignee (repeatable)' },
+])
+
+registerSchema('task', 'delete', 'Delete a task', [
+  { flag: '<task-id>', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
+
+registerSchema('task', 'time-in-status', 'Get time spent in each status for a task', [
+  { flag: '<task-id>', type: 'string', required: true, description: 'Task ID' },
+])
 
 const TASK_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 12 },

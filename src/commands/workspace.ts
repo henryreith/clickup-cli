@@ -4,6 +4,21 @@ import { resolveWorkspaceId } from '../config.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { WorkspaceListResponse, Seats, Plan } from '../types/workspace.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('workspace', 'list', 'List all workspaces accessible to the authenticated user', [])
+
+registerSchema('workspace', 'get', 'Get workspace details', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+])
+
+registerSchema('workspace', 'seats', 'Show seat usage for a workspace', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+])
+
+registerSchema('workspace', 'plan', 'Show current billing plan for a workspace', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+])
 
 const WORKSPACE_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 14 },

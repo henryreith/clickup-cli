@@ -2,6 +2,17 @@ import { Command } from 'commander'
 import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('relation', 'add', 'Add a relation between tasks', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--links-to', type: 'string', required: true, description: 'Task ID to link to' },
+])
+
+registerSchema('relation', 'remove', 'Remove a relation between tasks', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--links-to', type: 'string', required: true, description: 'Task ID to unlink from' },
+])
 
 const RELATION_COLUMNS: ColumnDef[] = [
   { key: 'task_id', header: 'Task ID', width: 14 },

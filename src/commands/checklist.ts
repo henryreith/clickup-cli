@@ -3,6 +3,44 @@ import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { ChecklistResponse } from '../types/checklist.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('checklist', 'create', 'Create a checklist on a task', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Checklist name' },
+])
+
+registerSchema('checklist', 'update', 'Update a checklist', [
+  { flag: '<checklist-id>', type: 'string', required: true, description: 'Checklist ID' },
+  { flag: '--name', type: 'string', required: false, description: 'New checklist name' },
+  { flag: '--position', type: 'integer', required: false, description: 'Position (0-indexed)' },
+])
+
+registerSchema('checklist', 'delete', 'Delete a checklist', [
+  { flag: '<checklist-id>', type: 'string', required: true, description: 'Checklist ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
+
+registerSchema('checklist', 'add-item', 'Add an item to a checklist', [
+  { flag: '<checklist-id>', type: 'string', required: true, description: 'Checklist ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Item name' },
+  { flag: '--assignee', type: 'string', required: false, description: 'Assignee user ID' },
+  { flag: '--resolved', type: 'boolean', required: false, description: 'Mark as resolved' },
+])
+
+registerSchema('checklist', 'update-item', 'Update a checklist item', [
+  { flag: '<checklist-id>', type: 'string', required: true, description: 'Checklist ID' },
+  { flag: '--item-id', type: 'string', required: true, description: 'Item ID' },
+  { flag: '--name', type: 'string', required: false, description: 'New item name' },
+  { flag: '--resolved', type: 'boolean', required: false, description: 'Resolved status' },
+  { flag: '--assignee', type: 'string', required: false, description: 'Assignee user ID' },
+])
+
+registerSchema('checklist', 'delete-item', 'Delete a checklist item', [
+  { flag: '<checklist-id>', type: 'string', required: true, description: 'Checklist ID' },
+  { flag: '--item-id', type: 'string', required: true, description: 'Item ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
 
 const CHECKLIST_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 20 },

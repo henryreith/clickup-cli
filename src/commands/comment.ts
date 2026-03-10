@@ -3,6 +3,47 @@ import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { CommentListResponse } from '../types/comment.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('comment', 'list', 'List comments on a task, list, or view', [
+  { flag: '--task-id', type: 'string', required: false, description: 'Task ID (provide one parent)' },
+  { flag: '--list-id', type: 'string', required: false, description: 'List ID (provide one parent)' },
+  { flag: '--view-id', type: 'string', required: false, description: 'View ID (provide one parent)' },
+  { flag: '--start', type: 'string', required: false, description: 'Pagination start timestamp' },
+  { flag: '--start-id', type: 'string', required: false, description: 'Pagination start comment ID' },
+])
+
+registerSchema('comment', 'create', 'Create a comment on a task, list, or view', [
+  { flag: '--task-id', type: 'string', required: false, description: 'Task ID (provide one parent)' },
+  { flag: '--list-id', type: 'string', required: false, description: 'List ID (provide one parent)' },
+  { flag: '--view-id', type: 'string', required: false, description: 'View ID (provide one parent)' },
+  { flag: '--text', type: 'string', required: true, description: 'Comment text' },
+  { flag: '--assignee', type: 'string', required: false, description: 'Assignee user ID' },
+  { flag: '--notify-all', type: 'boolean', required: false, description: 'Notify all watchers' },
+])
+
+registerSchema('comment', 'update', 'Update a comment', [
+  { flag: '<comment-id>', type: 'string', required: true, description: 'Comment ID' },
+  { flag: '--text', type: 'string', required: true, description: 'New comment text' },
+  { flag: '--assignee', type: 'string', required: false, description: 'Assignee user ID' },
+  { flag: '--resolved', type: 'boolean', required: false, description: 'Mark as resolved' },
+])
+
+registerSchema('comment', 'delete', 'Delete a comment', [
+  { flag: '<comment-id>', type: 'string', required: true, description: 'Comment ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
+
+registerSchema('comment', 'list-threaded', 'List threaded replies to a comment', [
+  { flag: '<comment-id>', type: 'string', required: true, description: 'Comment ID' },
+])
+
+registerSchema('comment', 'reply', 'Reply to a comment (threaded)', [
+  { flag: '<comment-id>', type: 'string', required: true, description: 'Comment ID' },
+  { flag: '--text', type: 'string', required: true, description: 'Reply text' },
+  { flag: '--assignee', type: 'string', required: false, description: 'Assignee user ID' },
+  { flag: '--notify-all', type: 'boolean', required: false, description: 'Notify all watchers' },
+])
 
 const COMMENT_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 12 },

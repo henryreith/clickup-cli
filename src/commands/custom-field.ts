@@ -3,6 +3,25 @@ import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { CustomFieldListResponse } from '../types/custom-field.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('field', 'list', 'List custom fields for a list, folder, space, or workspace', [
+  { flag: '--list-id', type: 'string', required: false, description: 'List ID' },
+  { flag: '--folder-id', type: 'string', required: false, description: 'Folder ID' },
+  { flag: '--space-id', type: 'string', required: false, description: 'Space ID' },
+  { flag: '--workspace-id', type: 'string', required: false, description: 'Workspace ID' },
+])
+
+registerSchema('field', 'set', 'Set a custom field value on a task', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--field-id', type: 'string', required: true, description: 'Field ID' },
+  { flag: '--value', type: 'string', required: true, description: 'Field value' },
+])
+
+registerSchema('field', 'remove', 'Remove a custom field value from a task', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--field-id', type: 'string', required: true, description: 'Field ID' },
+])
 
 const FIELD_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 20 },
