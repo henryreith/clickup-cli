@@ -20,6 +20,9 @@ npm install -g clickup-cli
 # Authenticate with your personal API token
 clickup auth login --token pk_12345678_ABCDEFG
 
+# Or authenticate via OAuth browser flow
+clickup auth login --oauth
+
 # Set your default workspace
 clickup config set workspace_id 12345678
 
@@ -61,8 +64,14 @@ clickup task list --list-id 901234567 --format quiet | xargs -I{} clickup task g
 | User Groups | list, create, update, delete |
 | Guests | invite, manage, permissions |
 | Webhooks | list, create, update, delete |
-| Templates | list |
+| Roles | list |
+| Members | list |
+| Shared Hierarchy | get |
+| Docs | list, get, create, update, delete, search, pages, page-get, page-create, page-update |
+| Templates | list, apply-task, apply-list, apply-folder |
 | Custom Task Types | list |
+| Schema | introspect resources, actions, fields |
+| Skills | list, show, path |
 
 ## Output Formats
 
@@ -77,7 +86,7 @@ Every command supports multiple output formats:
 
 ## AI Agent Usage
 
-The CLI is built from the ground up for AI agents, following the "CLI as execution layer, skills as guidance layer" pattern. It ships as a Claude Code plugin with 20 agent skills, and works with any agent platform that can run bash commands.
+The CLI is built from the ground up for AI agents, following the "CLI as execution layer, skills as guidance layer" pattern. It ships as a Claude Code plugin with 22 agent skills, and works with any agent platform that can run bash commands.
 
 ### Claude Code Plugin (Recommended)
 
@@ -95,7 +104,7 @@ Install the ClickUp CLI as a Claude Code plugin for zero-friction access to all 
 /clickup:sprint-planning list-id-here
 ```
 
-Once installed, Claude Code auto-discovers all 20 skills and loads them on demand. Recipe skills like `/clickup:weekly-review` run in isolated subagents with full ClickUp CLI access.
+Once installed, Claude Code auto-discovers all 22 skills and loads them on demand. Recipe skills like `/clickup:weekly-review` run in isolated subagents with full ClickUp CLI access.
 
 ### Claude Agent SDK
 

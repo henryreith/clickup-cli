@@ -1216,22 +1216,81 @@ clickup shared-hierarchy get --workspace-id 9876543
 
 ## Docs
 
-Search Docs (Pages) in a workspace. Full Doc management is handled through the ClickUp UI; the API exposes search only.
+Manage docs and pages using the ClickUp v3 API. Supports full CRUD operations on docs and their pages.
 
 ```
-clickup doc search --workspace-id <id> --query <text>
+clickup doc list
+clickup doc get --doc-id <id>
+clickup doc create --name <name> [--parent-id <id>] [--parent-type <type>] [--visibility <vis>]
+clickup doc update --doc-id <id> [--name <name>]
+clickup doc delete --doc-id <id> --confirm
+clickup doc search --query <text>
+clickup doc pages --doc-id <id>
+clickup doc page-get --doc-id <id> --page-id <id>
+clickup doc page-create --doc-id <id> --name <name> [--content <text>] [--parent-page-id <id>]
+clickup doc page-update --doc-id <id> --page-id <id> [--name <name>] [--content <text>]
 ```
+
+All doc commands use the workspace ID from `--workspace-id` or stored config.
+
+| Command | Description |
+|---------|-------------|
+| `doc list` | List all docs in the workspace |
+| `doc get` | Get a single doc by ID |
+| `doc create` | Create a new doc |
+| `doc update` | Update a doc's name |
+| `doc delete` | Delete a doc (requires `--confirm`) |
+| `doc search` | Search docs by query string |
+| `doc pages` | List all pages in a doc |
+| `doc page-get` | Get a single page from a doc |
+| `doc page-create` | Create a new page in a doc |
+| `doc page-update` | Update a page's name or content |
+
+**Doc create flags:**
 
 | Flag | Description |
 |------|-------------|
-| `--workspace-id <id>` | Workspace to search within |
-| `--query <text>` | Search query string |
+| `--name <name>` | Doc name (required) |
+| `--parent-id <id>` | Parent ID (space, folder, list, or task) |
+| `--parent-type <type>` | Parent type: 4=space, 5=folder, 6=list, 7=task |
+| `--visibility <vis>` | Visibility: private, workspace |
+
+**Page create/update flags:**
+
+| Flag | Description |
+|------|-------------|
+| `--doc-id <id>` | Doc ID (required) |
+| `--name <name>` | Page name (required for create) |
+| `--content <text>` | Page content (markdown) |
+| `--parent-page-id <id>` | Parent page ID (for nesting) |
+| `--page-id <id>` | Page ID (required for get/update) |
 
 **Examples**
 
 ```bash
+# List all docs in the workspace
+clickup doc list
+
+# Get a specific doc
+clickup doc get --doc-id abc123
+
+# Create a doc in a space
+clickup doc create --name "API Guide" --parent-id 12345 --parent-type 4
+
 # Search for docs mentioning "onboarding"
-clickup doc search --workspace-id 9876543 --query "onboarding"
+clickup doc search --query "onboarding"
+
+# List pages in a doc
+clickup doc pages --doc-id abc123
+
+# Create a page in a doc
+clickup doc page-create --doc-id abc123 --name "Getting Started" --content "Welcome!"
+
+# Update a page
+clickup doc page-update --doc-id abc123 --page-id p456 --name "Updated Title"
+
+# Delete a doc
+clickup doc delete --doc-id abc123 --confirm
 ```
 
 ---
@@ -1319,7 +1378,7 @@ clickup skill path clickup-tasks
 
 ## Plugin Installation
 
-The ClickUp CLI is also a Claude Code plugin. Installing it as a plugin gives Claude Code direct access to all 20 agent skills without manual setup.
+The ClickUp CLI is also a Claude Code plugin. Installing it as a plugin gives Claude Code direct access to all 22 agent skills without manual setup.
 
 ### Claude Code (Marketplace)
 
@@ -1397,11 +1456,18 @@ These flags apply to all commands.
 
 | Flag | Description |
 |------|-------------|
-| `--output <format>` | Output format: `table` (default), `json`, `yaml` |
-| `--no-color` | Disable colored output |
-| `--quiet` | Suppress all output except errors |
-| `--debug` | Print HTTP request/response details |
-| `--config <path>` | Use an alternate config file path |
+| `--token <token>` | API token (overrides stored token) |
+| `--workspace-id <id>` | Workspace ID (overrides stored config) |
+| `--format <format>` | Output format: table, json, csv, tsv, quiet, id |
+| `--no-color` | Disable colors |
+| `--no-header` | Omit column headers |
+| `--fields <fields>` | Show only specified fields (comma-separated) |
+| `--filter <filter>` | Client-side filter (key=value) |
+| `--sort <sort>` | Sort by field (field[:asc\|:desc]) |
+| `--limit <n>` | Limit results |
+| `--verbose` | Show request details |
+| `--debug` | Full debug output |
+| `--dry-run` | Print what would be sent without executing |
 
 ---
 
@@ -1425,4 +1491,5 @@ All of the following commands require the `--confirm` flag to prevent accidental
 | `user remove` | User workspace access |
 | `group delete` | User group |
 | `guest remove` | Guest workspace access |
+| `doc delete` | Doc and all pages |
 | `webhook delete` | Webhook registration |
