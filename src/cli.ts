@@ -5,6 +5,10 @@ import { resolveToken, resolveOutputFormat } from './config.js'
 import type { OutputOptions } from './output.js'
 import { registerAuthCommands } from './commands/auth-cmd.js'
 import { registerConfigCommands } from './commands/config-cmd.js'
+import { registerWorkspaceCommands } from './commands/workspace.js'
+import { registerSpaceCommands } from './commands/space.js'
+import { registerFolderCommands } from './commands/folder.js'
+import { registerListCommands } from './commands/list.js'
 
 const VERSION = '0.1.0'
 
@@ -71,6 +75,10 @@ export function run(): void {
 
   registerAuthCommands(program, () => createClient(program))
   registerConfigCommands(program)
+  registerWorkspaceCommands(program, () => createClient(program))
+  registerSpaceCommands(program, () => createClient(program))
+  registerFolderCommands(program, () => createClient(program))
+  registerListCommands(program, () => createClient(program))
 
   program.parseAsync(process.argv).catch((error: unknown) => {
     if (error instanceof ClickUpError) {
