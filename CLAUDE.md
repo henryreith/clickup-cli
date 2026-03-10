@@ -39,6 +39,8 @@ npm run typecheck  # tsc --noEmit
 - One type file per resource in `src/types/`
 - One test file per command group in `src/__tests__/commands/`
 - One skill per resource group in `skills/clickup-<resource>/SKILL.md`
+- `.claude-plugin/plugin.json` - Plugin manifest (name: `clickup`)
+- `.claude-plugin/marketplace.json` - Self-hosted marketplace catalog
 - Keep files under 400 lines. Split when they grow.
 
 ### Command Pattern
@@ -138,6 +140,15 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 - Recipe skills: set `disable-model-invocation: true`, `context: fork`, `agent: general-purpose`, `allowed-tools: Bash(clickup *)`
 - Recipe skills should accept `$ARGUMENTS` for parameterized invocation
 
+### Plugin Distribution
+- The repo root is a Claude Code plugin (`.claude-plugin/plugin.json` + `skills/`)
+- Plugin name is `clickup` for clean skill namespacing (`/clickup:weekly-review`)
+- The `skills/` directory is auto-discovered by the Claude Code plugin system
+- Both `.claude-plugin/` and `skills/` must be in the npm package `files` array
+- Users install via marketplace: `/plugin marketplace add henryreith/clickup-cli`
+- Agent SDK loads via: `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]`
+- After npm publish, submit to official Anthropic marketplace via claude.ai/settings/plugins/submit
+
 ## Key Design Decisions
 
 1. No wrapper SDK layer. Commands call client.get/post/put/delete with API paths directly. Zod schemas are the types.
@@ -147,6 +158,7 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 5. Auto-detect TTY for output format. JSON when piped, table when interactive.
 6. Skills over MCP for agent integration. Hierarchical skills keep token overhead near zero. ClickUp has an official MCP server for MCP-compatible hosts.
 7. Schema introspection from Zod. The `clickup schema` command derives its output from the same Zod schemas used for validation, keeping them always in sync.
+8. Plugin wraps skills for distribution. The repo functions as both a standalone CLI and a Claude Code plugin. No separate plugin repo needed. See SPEC.md Section 12.5.
 
 ## Reference
 

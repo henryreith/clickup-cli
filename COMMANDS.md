@@ -33,6 +33,7 @@ Complete command reference for the ClickUp CLI. Covers the full ClickUp API v2 s
 - [Docs](#docs)
 - [Schema (Introspection)](#schema-introspection)
 - [Skills (Agent Skills)](#skills-agent-skills)
+- [Plugin Installation](#plugin-installation)
 
 ---
 
@@ -1288,6 +1289,80 @@ clickup skill show clickup-weekly-review
 
 # Find where a skill file lives on disk
 clickup skill path clickup-tasks
+```
+
+---
+
+## Plugin Installation
+
+The ClickUp CLI is also a Claude Code plugin. Installing it as a plugin gives Claude Code direct access to all 20 agent skills without manual setup.
+
+### Claude Code (Marketplace)
+
+```bash
+# Add the marketplace (one-time setup)
+/plugin marketplace add henryreith/clickup-cli
+
+# Install the plugin
+/plugin install clickup@clickup-cli
+
+# Skills are now available as /clickup:skill-name
+/clickup:weekly-review workspace-id-here
+/clickup:sprint-planning list-id-here
+```
+
+### Claude Code (Local Development)
+
+```bash
+# Load plugin from local directory (no installation needed)
+claude --plugin-dir /path/to/clickup-cli
+```
+
+### Claude Agent SDK
+
+```typescript
+// TypeScript
+import { query } from "@anthropic-ai/claude-agent-sdk";
+
+for await (const message of query({
+  prompt: "Create a ClickUp task for the login bug",
+  options: {
+    plugins: [{ type: "local", path: "./node_modules/clickup-cli" }],
+    allowedTools: ["Skill", "Bash"],
+    settingSources: ["project"]
+  }
+})) {
+  console.log(message);
+}
+```
+
+```python
+# Python
+from claude_agent_sdk import query, ClaudeAgentOptions
+
+async for message in query(
+    prompt="Create a ClickUp task for the login bug",
+    options=ClaudeAgentOptions(
+        plugins=[{"type": "local", "path": "./node_modules/clickup-cli"}],
+        allowed_tools=["Skill", "Bash"],
+        setting_sources=["project"]
+    ),
+):
+    print(message)
+```
+
+### Other Agent Platforms (Gemini CLI, Codex, etc.)
+
+```bash
+# Install the CLI globally
+npm install -g clickup-cli
+
+# Agents discover skills at runtime
+clickup skill list
+clickup skill show clickup-tasks
+
+# Agents execute commands via bash
+clickup task list --list-id abc123 --format json
 ```
 
 ---

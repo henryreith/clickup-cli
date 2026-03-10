@@ -77,7 +77,44 @@ Every command supports multiple output formats:
 
 ## AI Agent Usage
 
-The CLI is built from the ground up for AI agents, following the "CLI as execution layer, skills as guidance layer" pattern (similar to the Google Workspace CLI).
+The CLI is built from the ground up for AI agents, following the "CLI as execution layer, skills as guidance layer" pattern. It ships as a Claude Code plugin with 20 agent skills, and works with any agent platform that can run bash commands.
+
+### Claude Code Plugin (Recommended)
+
+Install the ClickUp CLI as a Claude Code plugin for zero-friction access to all skills:
+
+```bash
+# Add the marketplace (one-time)
+/plugin marketplace add henryreith/clickup-cli
+
+# Install the plugin
+/plugin install clickup@clickup-cli
+
+# Use skills directly
+/clickup:weekly-review 12345678
+/clickup:sprint-planning list-id-here
+```
+
+Once installed, Claude Code auto-discovers all 20 skills and loads them on demand. Recipe skills like `/clickup:weekly-review` run in isolated subagents with full ClickUp CLI access.
+
+### Claude Agent SDK
+
+Build custom agents with ClickUp skills using the Agent SDK:
+
+```typescript
+import { query } from "@anthropic-ai/claude-agent-sdk";
+
+for await (const message of query({
+  prompt: "Create a task for the login bug fix and assign to the backend team",
+  options: {
+    plugins: [{ type: "local", path: "./node_modules/clickup-cli" }],
+    allowedTools: ["Skill", "Bash"],
+    settingSources: ["project"]
+  }
+})) {
+  console.log(message);
+}
+```
 
 ### Skills System
 
@@ -99,8 +136,18 @@ clickup skill show clickup-weekly-review
 
 **Three skill tiers:**
 - **Root skill** - Index and router. What the CLI does, how to discover more.
-- **Sub-skills** - Per-resource command reference. Tasks, spaces, comments, time tracking, etc.
-- **Recipe skills** - Multi-step workflow guides. Sprint planning, weekly review, task triage, etc.
+- **Sub-skills** (9) - Per-resource command reference. Tasks, spaces, comments, time tracking, etc.
+- **Recipe skills** (10) - Multi-step workflow guides. Sprint planning, weekly review, task triage, etc.
+
+### Cross-Platform Agent Support
+
+| Platform | How to use |
+|----------|-----------|
+| Claude Code | Plugin via marketplace (see above) |
+| Claude Agent SDK | `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]` |
+| Gemini CLI | `npm install -g clickup-cli`, read skills via `clickup skill show` |
+| OpenAI Codex | `npm install -g clickup-cli`, execute commands via bash |
+| Custom agents | `clickup skill list` for discovery, `clickup schema` for field info |
 
 ### Agent-Friendly Design
 

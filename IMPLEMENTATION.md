@@ -284,23 +284,40 @@ The largest and most complex resource. Take time to get this right since it sets
 - Each recipe: sequence of CLI commands with conditional logic hints
 - Target: 200-400 lines each
 
-### Step 41: README.md
+### Step 41: Plugin Structure
+- Create `.claude-plugin/plugin.json` with name `clickup`, version, author, and metadata
+- Create `.claude-plugin/marketplace.json` for self-hosted marketplace at `henryreith/clickup-cli`
+- Test with `claude --plugin-dir .` to verify all 20 skills load and namespace as `/clickup:*`
+- Verify plugin manifest validates with `claude plugin validate .`
+
+### Step 42: Plugin Testing & Distribution
+- Test marketplace add/install flow: `/plugin marketplace add henryreith/clickup-cli` then `/plugin install clickup@clickup-cli`
+- Verify npm package includes `.claude-plugin/` and `skills/` directories
+- Test Agent SDK integration: `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]`
+- Document all installation paths in README
+
+### Step 43: Official Marketplace Submission (post-release)
+- Submit plugin to official Anthropic marketplace via claude.ai/settings/plugins/submit or platform.claude.com/plugins/submit
+- Include npm source in submission: `{ "source": "npm", "package": "clickup-cli" }`
+- Once accepted, users can install without a custom marketplace: `/plugin install clickup@claude-plugins-official`
+
+### Step 44: README.md
 - One-line description, badges
-- Install instructions
+- Install instructions (npm global + Claude Code plugin)
 - Quick start (auth, list workspaces, list tasks)
 - Command reference overview (link to full docs)
 - Configuration reference
 - Output formats with examples
-- AI agent usage guide (skills architecture, schema commands)
+- AI agent usage guide: Claude Code plugin, Agent SDK, cross-platform agents
 - Contributing section
 - License
 
-### Step 42: CI/CD
+### Step 45: CI/CD
 - GitHub Actions workflow: test, typecheck, build on PR
 - Publish to npm on tag/release
 - Dependabot or renovate for dependency updates
 
-**Milestone: 100% ClickUp API v2 coverage. Schema introspection and agent skills system complete. Ready for npm publish.**
+**Milestone: 100% ClickUp API v2 coverage. Schema introspection, agent skills, and Claude Code plugin complete. Ready for npm publish and marketplace submission.**
 
 ---
 
@@ -326,3 +343,5 @@ After each phase, verify:
 - Refer to COMMANDS.md for the exact flags each command needs
 - Refer to SPEC.md for architectural decisions and patterns
 - Refer to SPEC.md Section 12.2 for skills architecture and file format
+- Refer to SPEC.md Section 12.5 for cross-platform agent integration and plugin distribution
+- The `.claude-plugin/` directory and `skills/` must both be in the npm package `files` array

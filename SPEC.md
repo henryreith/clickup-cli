@@ -146,7 +146,10 @@ clickup-cli/
         view.json
         time-entry.json
         webhook.json
-  skills/                       # Agent skill files (bundled in npm package)
+  .claude-plugin/
+    plugin.json               # Claude Code plugin manifest (name: "clickup")
+    marketplace.json          # Self-hosted marketplace catalog
+  skills/                       # Agent skill files (bundled in npm package + plugin)
     clickup/
       SKILL.md                  # Root skill - lightweight index for agents
     clickup-tasks/
@@ -207,6 +210,8 @@ clickup-cli/
 | `src/commands/schema-cmd.ts` | Schema introspection: list resources, describe actions, show fields. |
 | `src/commands/skill-cmd.ts` | Skill management: list available skills, output skill content to stdout. |
 | `src/schema.ts` | Schema registry: maps resource.action to field definitions for introspection. |
+| `.claude-plugin/plugin.json` | Claude Code plugin manifest. Defines plugin name, version, and metadata. |
+| `.claude-plugin/marketplace.json` | Self-hosted marketplace catalog. Lists the plugin for `/plugin marketplace add`. |
 | `skills/*/SKILL.md` | Agent skill files. Root skill, sub-skills per resource, and recipe skills. |
 
 ---
@@ -720,24 +725,62 @@ Recipe skills use `$ARGUMENTS` for parameterized invocation: `/weekly-review 987
 
 **Skill distribution:**
 
-Skills are both files in the repo (`skills/` directory) and bundled in the npm package. Two access paths:
+Skills are distributed through three complementary channels:
 
-1. **File-based:** Agents read skill files directly from the repo or installed package location
-2. **CLI-based:** `clickup skill list` shows available skills; `clickup skill show <name>` outputs the SKILL.md content to stdout
+1. **Claude Code Plugin:** The repo is structured as a Claude Code plugin (`.claude-plugin/plugin.json` + `skills/`). Users install via marketplace or `--plugin-dir`. Skills are namespaced as `/clickup:skill-name`.
+2. **npm package:** The `skills/` and `.claude-plugin/` directories are included in the npm package. Agents using the Claude Agent SDK can load the plugin from `node_modules/`.
+3. **CLI-based:** `clickup skill list` shows available skills; `clickup skill show <name>` outputs the SKILL.md content to stdout. Works with any agent platform.
 
-The CLI-based path means agents can discover and load skills without knowing the file system location.
+**Plugin structure:**
 
-**Platform integration:**
+The repo root doubles as a Claude Code plugin:
 
-Agent platforms discover skills through their own conventions:
+```
+clickup-cli/
+  .claude-plugin/
+    plugin.json              # Plugin manifest (name: "clickup")
+    marketplace.json         # Self-hosted marketplace catalog
+  skills/                    # Auto-discovered by Claude Code plugin system
+    clickup/SKILL.md         # Root skill
+    clickup-tasks/SKILL.md   # Sub-skill
+    clickup-weekly-review/SKILL.md  # Recipe skill
+    ...
+```
 
-| Platform | Discovery path |
-|----------|---------------|
-| Claude Code | `.claude/skills/` or project `skills/` directory (auto-discovered) |
-| Claude Desktop | Upload skills individually via skill management |
-| Claude API | Upload via API skill endpoints (no network access in skills) |
-| Gemini CLI | Symlink or copy to `~/.gemini/skills/` |
-| Custom agents | Read `skills/clickup/SKILL.md` or run `clickup skill show clickup` |
+Plugin name is `clickup` so skills namespace cleanly: `/clickup:weekly-review`, `/clickup:sprint-planning`, etc.
+
+**Installation paths:**
+
+```bash
+# Claude Code -- marketplace (recommended)
+/plugin marketplace add henryreith/clickup-cli
+/plugin install clickup@clickup-cli
+
+# Claude Code -- local development
+claude --plugin-dir /path/to/clickup-cli
+
+# Claude Agent SDK (TypeScript)
+import { query } from "@anthropic-ai/claude-agent-sdk";
+for await (const message of query({
+  prompt: "Create a task for the login bug fix",
+  options: {
+    plugins: [{ type: "local", path: "./node_modules/clickup-cli" }],
+    allowedTools: ["Skill", "Bash"],
+    settingSources: ["project"]
+  }
+})) { console.log(message); }
+
+# Claude Agent SDK (Python)
+from claude_agent_sdk import query, ClaudeAgentOptions
+async for message in query(
+    prompt="Create a task for the login bug fix",
+    options=ClaudeAgentOptions(
+        plugins=[{"type": "local", "path": "./node_modules/clickup-cli"}],
+        allowed_tools=["Skill", "Bash"],
+        setting_sources=["project"]
+    ),
+): print(message)
+```
 
 **Cross-platform notes:**
 - Skills do not sync across platforms. Install separately for each target.
@@ -810,6 +853,29 @@ ClickUp provides an official MCP server for use with MCP-compatible clients. The
 | Best for | Claude Code, Gemini CLI, Codex, custom agents | Claude Desktop, Cursor, VS Code |
 
 For agents running in a terminal environment (Claude Code, Gemini CLI, Codex CLI), the CLI + skills approach is strictly more token-efficient. For GUI-based MCP hosts, point users to ClickUp's official MCP server.
+
+### 12.5 Cross-Platform Agent Integration
+
+The CLI is designed to work across the entire agent ecosystem, not just Claude:
+
+| Platform | Integration method | Skill discovery | Setup |
+|----------|-------------------|-----------------|-------|
+| **Claude Code** | Plugin via marketplace | Auto-discovered from `skills/` | `/plugin marketplace add henryreith/clickup-cli` then `/plugin install clickup@clickup-cli` |
+| **Claude Agent SDK** | Plugin via `plugins` option | Loaded from `node_modules/` | `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]` |
+| **Claude Desktop** | Via Agent SDK applications | Agent SDK loads plugin | Build an Agent SDK app that includes the plugin |
+| **Gemini CLI** | Bash execution | Reference skill files or `clickup skill show` | `npm install -g clickup-cli`, read skills from package |
+| **OpenAI Codex** | Bash execution | Reference skill files or `clickup skill show` | `npm install -g clickup-cli`, read skills from package |
+| **Custom agents** | Bash execution | `clickup skill list` / `clickup skill show <name>` | `npm install -g clickup-cli` |
+
+**Key principle:** The CLI is the universal execution layer. Every agent platform that can run bash commands can use it. Skills provide agent-specific guidance. The plugin system adds zero-friction installation for Claude Code users.
+
+**Non-Claude agents:** Agents that cannot install Claude Code plugins (Gemini CLI, Codex, custom LLM agents) use the CLI directly. They can:
+1. Run `clickup skill show <name>` to load skill instructions into their context
+2. Run `clickup schema <resource>.<action>` to discover command fields
+3. Execute `clickup <command>` via bash for all operations
+4. Pipe JSON output (`--format json`) for structured data parsing
+
+After the CLI is published to npm and functional, submit the plugin to the official Anthropic marketplace via `claude.ai/settings/plugins/submit` or `platform.claude.com/plugins/submit`. This enables installation without a custom marketplace: `/plugin install clickup@claude-plugins-official`.
 
 ---
 
@@ -1324,7 +1390,7 @@ clickup skill show clickup-weekly-review    # Outputs recipe skill content
   "bin": {
     "clickup": "./dist/bin/clickup.js"
   },
-  "files": ["dist", "skills"],
+  "files": ["dist", "skills", ".claude-plugin"],
   "engines": { "node": ">=22.0.0" },
   "scripts": {
     "build": "tsup",
@@ -1448,6 +1514,9 @@ Instead of building an MCP server (ClickUp already provides one officially), the
 
 **11. Schema introspection over documentation.**
 Agents can discover command fields at runtime via `clickup schema <resource>.<action>` instead of needing full docs in context. The schema registry is derived from the same Zod schemas used for validation, so it is always in sync. See Section 12.3.
+
+**12. Plugin wraps skills for distribution.**
+The repo functions as both a standalone CLI and a Claude Code plugin. Adding `.claude-plugin/plugin.json` to the repo root makes all 20 skills installable via `/plugin marketplace add henryreith/clickup-cli`. The same plugin structure ships in the npm package, enabling Agent SDK integration via `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]`. No separate plugin repo needed. See Section 12.5.
 
 ---
 
