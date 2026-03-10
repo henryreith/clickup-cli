@@ -1,0 +1,12 @@
+{
+  "name": "clickup",
+  "description": "Comprehensive ClickUp CLI with 20 agent skills for tasks, time tracking, goals, sprints, and project management workflows",
+  "version": "0.1.0",
+  "author": {
+    "name": "Henry Reith"
+  },
+  "homepage": "https://github.com/henryreith/clickup-cli",
+  "repository": "https://github.com/henryreith/clickup-cli",
+  "license": "MIT",
+  "keywords": ["clickup", "project-management", "tasks", "time-tracking", "agile", "sprint"]
+}

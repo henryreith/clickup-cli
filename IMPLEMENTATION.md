@@ -110,8 +110,9 @@ The largest and most complex resource. Take time to get this right since it sets
 
 ### Step 15: Task Commands
 - Types: src/types/task.ts (largest schema)
-- Commands: list (with all filter flags), search, get, create, update, delete, time-in-status, bulk-time-in-status
+- Commands: list (with all filter flags), search, get, create, update, delete, move, duplicate, merge, time-in-status, bulk-time-in-status
 - Handle subtask creation via --parent flag
+- Task merge: POST /task/{id}/merge
 - Implement all query param filters for list and search
 - API paths: GET /list/{id}/task, GET /team/{id}/task (search), POST /list/{id}/task, etc.
 
@@ -122,8 +123,9 @@ The largest and most complex resource. Take time to get this right since it sets
 
 ### Step 17: Custom Field Commands
 - Types: src/types/custom-field.ts
-- Commands: list (by list-id), set (on task), remove (from task)
-- API paths: GET /list/{id}/field, POST /task/{id}/field/{fid}, DELETE /task/{id}/field/{fid}
+- Commands: list (by list-id, folder-id, space-id, or workspace-id), set (on task), remove (from task)
+- Polymorphic list: routes to correct API endpoint based on which ID flag is provided
+- API paths: GET /list/{id}/field, GET /folder/{id}/field, GET /space/{id}/field, GET /team/{id}/field, POST /task/{id}/field/{fid}, DELETE /task/{id}/field/{fid}
 
 ### Step 18: Tag Commands
 - Types: src/types/tag.ts
@@ -153,9 +155,11 @@ The largest and most complex resource. Take time to get this right since it sets
 
 ### Step 22: Time Tracking Commands
 - Types: src/types/time-tracking.ts
-- Commands: list (by task or workspace), get, create, update, delete, history, running, start, stop, tags, add-tags, remove-tags, rename-tag
+- Commands: list (by task or workspace with date range), get, create, update, delete, history, current, start, stop, tags, add-tags, remove-tags, rename-tag
 - Handle running timer state
-- API paths: GET /task/{id}/time, POST /task/{id}/time, GET /team/{id}/time_entries, etc.
+- Workspace-level listing with date range filters and assignee filter
+- Time entry tag management (add/remove/rename) as separate operations
+- API paths: GET /task/{id}/time, POST /task/{id}/time, GET /team/{id}/time_entries, GET /team/{id}/time_entries/current, POST /team/{id}/time_entries/start, POST /team/{id}/time_entries/stop, etc.
 
 **Milestone: Can manage comments and track time from CLI.**
 
@@ -213,8 +217,9 @@ The largest and most complex resource. Take time to get this right since it sets
 ## Phase 7: Remaining Resources & Polish
 
 ### Step 31: Template Commands
-- Commands: list
-- API path: GET /team/{id}/taskTemplate
+- Commands: list, apply-task, apply-list, apply-folder
+- List: GET /team/{id}/taskTemplate
+- Apply: POST /list/{id}/taskTemplate/{tid}, POST /folder/{id}/listTemplate/{tid}, POST /space/{id}/listTemplate/{tid}, POST /space/{id}/folderTemplate/{tid}
 
 ### Step 32: Custom Task Type Commands
 - Commands: list
@@ -224,9 +229,10 @@ The largest and most complex resource. Take time to get this right since it sets
 - Commands: get
 - API path: GET /team/{id}/shared
 
-### Step 34: Doc Commands (if v2 endpoints exist)
-- Commands: search
-- API path: GET /team/{id}/doc (if available)
+### Step 34: Doc Commands (v3 endpoints)
+- Commands: list, get, create, update, delete, pages, page-get, page-create, page-update
+- Uses ClickUp API v3 doc endpoints for full functionality
+- API paths: GET /v3/workspaces/{id}/docs, POST /v3/workspaces/{id}/docs, GET /v3/workspaces/{id}/docs/{id}/pages, etc.
 
 ### Step 35: OAuth2 Flow
 - Implement full OAuth2 flow in src/auth.ts
@@ -234,23 +240,88 @@ The largest and most complex resource. Take time to get this right since it sets
 - Browser launch
 - Token exchange and storage
 
-### Step 36: README.md
+### Step 36: Schema Introspection (src/commands/schema-cmd.ts + src/schema.ts)
+- Schema registry: maps resource.action to field definitions (derived from Zod schemas)
+- `clickup schema` - list all resources
+- `clickup schema <resource>` - list actions for a resource
+- `clickup schema <resource>.<action>` - show required/optional fields with types
+- JSON output for machine consumption, formatted table for humans
+- Tests: verify schema output matches actual command options
+
+### Step 37: Skill Commands (src/commands/skill-cmd.ts)
+- `clickup skill list` - list all available skills (reads skills/ directory)
+- `clickup skill show <name>` - output SKILL.md content to stdout
+- `clickup skill show <name> --format json` - output skill metadata as JSON
+- `clickup skill path <name>` - print file system path to skill directory
+- Resolve skills from bundled package location or local project directory
+- Tests: verify skill listing, content output, path resolution
+
+### Step 38: Root Skill (skills/clickup/SKILL.md)
+- Lightweight index (~150 tokens) describing what the CLI does
+- Lists all sub-skills with one-line descriptions
+- Lists all recipe skills with one-line descriptions
+- Instructions: how to discover commands, when to load sub-skills
+- Follows Anthropic Agent Skills standard (YAML frontmatter + markdown)
+
+### Step 39: Sub-Skills (skills/clickup-*/SKILL.md)
+- One sub-skill per resource group (tasks, spaces, comments, time, goals, views, users, webhooks, fields)
+- Each contains: exact command syntax, required/optional flags, common patterns, discovery hints
+- Target: 100-300 lines each, ~200-500 tokens
+- Cross-references to related sub-skills where relevant
+
+### Step 40: Recipe Skills
+- 12 recipe skills for common PM workflows:
+  - clickup-weekly-review: weekly progress report, scoped to any team/department/space
+  - clickup-team-report: department or team status rundown (marketing, engineering, ops, etc.)
+  - clickup-custom-report: any ad-hoc query or filtered report from natural language
+  - clickup-sprint-planning: set up sprint with tasks from backlog
+  - clickup-task-triage: sort and prioritize incoming tasks
+  - clickup-standup: generate daily standup summary for a person or team
+  - clickup-sprint-closeout: close sprint, move incomplete items, generate retro data
+  - clickup-time-audit: audit time tracking entries and utilization
+  - clickup-project-setup: scaffold new project with spaces, lists, and templates
+  - clickup-capacity-check: check team workload and availability
+  - clickup-blocker-report: find blocked tasks and dependency chains
+  - clickup-goal-progress: report on goal/OKR completion status
+- All recipes accept `$ARGUMENTS` for natural language scoping (team, department, person, etc.)
+- Each recipe: sequence of CLI commands with conditional logic hints
+- Target: 200-400 lines each
+- Users can create their own recipes as custom skills in `.claude/skills/`
+
+### Step 41: Plugin Structure
+- Create `.claude-plugin/plugin.json` with name `clickup`, version, author, and metadata
+- Create `.claude-plugin/marketplace.json` for self-hosted marketplace at `henryreith/clickup-cli`
+- Test with `claude --plugin-dir .` to verify all 20 skills load and namespace as `/clickup:*`
+- Verify plugin manifest validates with `claude plugin validate .`
+
+### Step 42: Plugin Testing & Distribution
+- Test marketplace add/install flow: `/plugin marketplace add henryreith/clickup-cli` then `/plugin install clickup@clickup-cli`
+- Verify npm package includes `.claude-plugin/` and `skills/` directories
+- Test Agent SDK integration: `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]`
+- Document all installation paths in README
+
+### Step 43: Official Marketplace Submission (post-release)
+- Submit plugin to official Anthropic marketplace via claude.ai/settings/plugins/submit or platform.claude.com/plugins/submit
+- Include npm source in submission: `{ "source": "npm", "package": "clickup-cli" }`
+- Once accepted, users can install without a custom marketplace: `/plugin install clickup@claude-plugins-official`
+
+### Step 44: README.md
 - One-line description, badges
-- Install instructions
+- Install instructions (npm global + Claude Code plugin)
 - Quick start (auth, list workspaces, list tasks)
 - Command reference overview (link to full docs)
 - Configuration reference
 - Output formats with examples
-- AI agent usage guide
+- AI agent usage guide: Claude Code plugin, Agent SDK, cross-platform agents
 - Contributing section
 - License
 
-### Step 37: CI/CD
+### Step 45: CI/CD
 - GitHub Actions workflow: test, typecheck, build on PR
 - Publish to npm on tag/release
 - Dependabot or renovate for dependency updates
 
-**Milestone: 100% ClickUp API v2 coverage. Ready for npm publish.**
+**Milestone: 100% ClickUp API v2 coverage. Schema introspection, agent skills, and Claude Code plugin complete. Ready for npm publish and marketplace submission.**
 
 ---
 
@@ -270,6 +341,11 @@ After each phase, verify:
 - Each command file follows the exact same pattern (see SPEC.md section 13)
 - Every API response type gets a Zod schema
 - Every resource gets column definitions for table output
+- Every resource gets field definitions registered in src/schema.ts for introspection
 - Test each command group before moving to the next
+- When adding a new command group, also create/update the corresponding sub-skill in skills/
 - Refer to COMMANDS.md for the exact flags each command needs
 - Refer to SPEC.md for architectural decisions and patterns
+- Refer to SPEC.md Section 12.2 for skills architecture and file format
+- Refer to SPEC.md Section 12.5 for cross-platform agent integration and plugin distribution
+- The `.claude-plugin/` directory and `skills/` must both be in the npm package `files` array

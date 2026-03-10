@@ -4,6 +4,8 @@
 
 A standalone, open-source CLI covering the entire ClickUp API v2 surface. Not tied to any specific framework or AI agent system. Published to npm as a global CLI tool.
 
+**Note:** This file (CLAUDE.md) guides AI agents **building** the CLI codebase. For AI agents **using** the CLI to manage ClickUp data, see the skills system in `skills/` and SPEC.md Section 12.
+
 ## Stack
 
 - **Runtime:** Node.js 22+, TypeScript strict mode, ESM modules
@@ -36,6 +38,9 @@ npm run typecheck  # tsc --noEmit
 - One command group per file in `src/commands/`
 - One type file per resource in `src/types/`
 - One test file per command group in `src/__tests__/commands/`
+- One skill per resource group in `skills/clickup-<resource>/SKILL.md`
+- `.claude-plugin/plugin.json` - Plugin manifest (name: `clickup`)
+- `.claude-plugin/marketplace.json` - Self-hosted marketplace catalog
 - Keep files under 400 lines. Split when they grow.
 
 ### Command Pattern
@@ -122,6 +127,28 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 - In non-TTY mode without --confirm: fail with error
 - Never auto-confirm destructive actions
 
+### Schema and Skills
+- Register field definitions in `src/schema.ts` for every command action
+- Schema definitions are derived from the same Zod schemas used for validation
+- When adding a new command group, create/update the corresponding skill in `skills/`
+- Skill files follow the [Anthropic Agent Skills standard](https://agentskills.io) (YAML frontmatter + markdown)
+- Keep sub-skills under 300 lines; keep recipe skills under 400 lines
+- Descriptions in third person ("Creates tasks" not "Create tasks")
+- Descriptions must include BOTH what it does AND when to use it ("Use when...")
+- Root skill: set `user-invocable: false` (background knowledge only)
+- Sub-skills: add `allowed-tools` scoped to relevant `clickup` subcommands
+- Recipe skills: set `disable-model-invocation: true`, `context: fork`, `agent: general-purpose`, `allowed-tools: Bash(clickup *)`
+- Recipe skills should accept `$ARGUMENTS` for parameterized invocation
+
+### Plugin Distribution
+- The repo root is a Claude Code plugin (`.claude-plugin/plugin.json` + `skills/`)
+- Plugin name is `clickup` for clean skill namespacing (`/clickup:weekly-review`)
+- The `skills/` directory is auto-discovered by the Claude Code plugin system
+- Both `.claude-plugin/` and `skills/` must be in the npm package `files` array
+- Users install via marketplace: `/plugin marketplace add henryreith/clickup-cli`
+- Agent SDK loads via: `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]`
+- After npm publish, submit to official Anthropic marketplace via claude.ai/settings/plugins/submit
+
 ## Key Design Decisions
 
 1. No wrapper SDK layer. Commands call client.get/post/put/delete with API paths directly. Zod schemas are the types.
@@ -129,6 +156,9 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 3. Polymorphic commands over separate commands. `comment list --task-id` and `comment list --list-id` are one command, not two.
 4. JSON field names match the ClickUp API exactly. No renaming, no camelCase conversion.
 5. Auto-detect TTY for output format. JSON when piped, table when interactive.
+6. Skills over MCP for agent integration. Hierarchical skills keep token overhead near zero. ClickUp has an official MCP server for MCP-compatible hosts.
+7. Schema introspection from Zod. The `clickup schema` command derives its output from the same Zod schemas used for validation, keeping them always in sync.
+8. Plugin wraps skills for distribution. The repo functions as both a standalone CLI and a Claude Code plugin. No separate plugin repo needed. See SPEC.md Section 12.5.
 
 ## Reference
 
