@@ -4,6 +4,35 @@ import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import { resolveWorkspaceId } from '../config.js'
 import type { WebhookListResponse, WebhookResponse } from '../types/webhook.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('webhook', 'list', 'List webhooks in a workspace', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+])
+
+registerSchema('webhook', 'create', 'Create a webhook', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '--endpoint', type: 'string', required: true, description: 'Webhook endpoint URL' },
+  { flag: '--event', type: 'string[]', required: false, description: 'Event to subscribe to (repeatable)' },
+  { flag: '--space-id', type: 'string', required: false, description: 'Scope to space' },
+  { flag: '--folder-id', type: 'string', required: false, description: 'Scope to folder' },
+  { flag: '--list-id', type: 'string', required: false, description: 'Scope to list' },
+  { flag: '--task-id', type: 'string', required: false, description: 'Scope to task' },
+])
+
+registerSchema('webhook', 'update', 'Update a webhook', [
+  { flag: '<webhook-id>', type: 'string', required: true, description: 'Webhook ID' },
+  { flag: '--endpoint', type: 'string', required: false, description: 'New endpoint URL' },
+  { flag: '--event', type: 'string[]', required: false, description: 'Events (repeatable, replaces existing)' },
+  { flag: '--status', type: 'string', required: false, description: 'Status (active or inactive)' },
+])
+
+registerSchema('webhook', 'delete', 'Delete a webhook', [
+  { flag: '<webhook-id>', type: 'string', required: true, description: 'Webhook ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
+
+registerSchema('webhook', 'events', 'List available webhook event types', [])
 
 const WEBHOOK_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 20 },

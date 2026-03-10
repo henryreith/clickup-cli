@@ -2,6 +2,19 @@ import { Command } from 'commander'
 import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('dependency', 'add', 'Add a dependency between tasks', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--depends-on', type: 'string', required: false, description: 'This task depends on the given task' },
+  { flag: '--dependency-of', type: 'string', required: false, description: 'This task is a dependency of the given task' },
+])
+
+registerSchema('dependency', 'remove', 'Remove a dependency between tasks', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--depends-on', type: 'string', required: false, description: 'Remove depends-on relationship' },
+  { flag: '--dependency-of', type: 'string', required: false, description: 'Remove dependency-of relationship' },
+])
 
 const DEPENDENCY_COLUMNS: ColumnDef[] = [
   { key: 'task_id', header: 'Task ID', width: 14 },

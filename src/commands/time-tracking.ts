@@ -11,6 +11,64 @@ import type {
   TimeEntryTagListResponse,
   TimeEntryHistoryResponse,
 } from '../types/time-tracking.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('time', 'list', 'List time entries for a task or workspace', [
+  { flag: '--task-id', type: 'string', required: false, description: 'Task ID (or use --workspace-id for workspace-wide)' },
+  { flag: '--workspace-id', type: 'string', required: false, description: 'Workspace ID' },
+  { flag: '--start', type: 'string', required: false, description: 'Start date' },
+  { flag: '--end', type: 'string', required: false, description: 'End date' },
+  { flag: '--assignee', type: 'string[]', required: false, description: 'Assignee user ID (repeatable)' },
+])
+
+registerSchema('time', 'get', 'Get a specific time entry', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '<timer-id>', type: 'string', required: true, description: 'Time entry ID' },
+])
+
+registerSchema('time', 'create', 'Create a time entry on a task', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--duration', type: 'string', required: true, description: 'Duration in milliseconds' },
+  { flag: '--start', type: 'string', required: true, description: 'Start time (Unix ms or date string)' },
+  { flag: '--description', type: 'string', required: false, description: 'Description' },
+  { flag: '--billable', type: 'boolean', required: false, description: 'Billable' },
+  { flag: '--tag', type: 'string[]', required: false, description: 'Tag name (repeatable)' },
+])
+
+registerSchema('time', 'update', 'Update a time entry', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '<timer-id>', type: 'string', required: true, description: 'Time entry ID' },
+  { flag: '--description', type: 'string', required: false, description: 'Description' },
+  { flag: '--duration', type: 'string', required: false, description: 'Duration in ms' },
+  { flag: '--start', type: 'string', required: false, description: 'Start time' },
+  { flag: '--billable', type: 'boolean', required: false, description: 'Billable' },
+  { flag: '--tag', type: 'string[]', required: false, description: 'Tag name (repeatable)' },
+])
+
+registerSchema('time', 'delete', 'Delete a time entry', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '<timer-id>', type: 'string', required: true, description: 'Time entry ID' },
+])
+
+registerSchema('time', 'running', 'Get current running timer', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '--assignee', type: 'string', required: false, description: 'Assignee user ID' },
+])
+
+registerSchema('time', 'start', 'Start a running timer', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--description', type: 'string', required: false, description: 'Description' },
+  { flag: '--billable', type: 'boolean', required: false, description: 'Billable' },
+])
+
+registerSchema('time', 'stop', 'Stop the running timer', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+])
+
+registerSchema('time', 'tags', 'List time tracking tags', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+])
 
 const TIME_ENTRY_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 12 },

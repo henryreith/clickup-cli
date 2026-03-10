@@ -4,6 +4,60 @@ import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import { resolveWorkspaceId } from '../config.js'
 import type { GoalListResponse, GoalResponse, KeyResultResponse } from '../types/goal.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('goal', 'list', 'List goals in a workspace', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '--include-completed', type: 'boolean', required: false, description: 'Include completed goals' },
+])
+
+registerSchema('goal', 'get', 'Get a goal', [
+  { flag: '<goal-id>', type: 'string', required: true, description: 'Goal ID' },
+])
+
+registerSchema('goal', 'create', 'Create a goal', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Goal name' },
+  { flag: '--due-date', type: 'string', required: false, description: 'Due date (Unix ms)' },
+  { flag: '--description', type: 'string', required: false, description: 'Description' },
+  { flag: '--multiple-owners', type: 'boolean', required: false, description: 'Allow multiple owners' },
+  { flag: '--owner', type: 'string[]', required: false, description: 'Owner user ID (repeatable)' },
+  { flag: '--color', type: 'string', required: false, description: 'Color hex code' },
+])
+
+registerSchema('goal', 'update', 'Update a goal', [
+  { flag: '<goal-id>', type: 'string', required: true, description: 'Goal ID' },
+  { flag: '--name', type: 'string', required: false, description: 'Goal name' },
+  { flag: '--due-date', type: 'string', required: false, description: 'Due date (Unix ms)' },
+  { flag: '--description', type: 'string', required: false, description: 'Description' },
+  { flag: '--color', type: 'string', required: false, description: 'Color hex code' },
+])
+
+registerSchema('goal', 'delete', 'Delete a goal', [
+  { flag: '<goal-id>', type: 'string', required: true, description: 'Goal ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
+
+registerSchema('goal', 'add-key-result', 'Add a key result to a goal', [
+  { flag: '<goal-id>', type: 'string', required: true, description: 'Goal ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Key result name' },
+  { flag: '--type', type: 'string', required: true, description: 'Type (number, currency, boolean, percentage, automatic)' },
+  { flag: '--steps-start', type: 'string', required: false, description: 'Starting value' },
+  { flag: '--steps-end', type: 'string', required: false, description: 'Target value' },
+  { flag: '--unit', type: 'string', required: false, description: 'Unit label' },
+])
+
+registerSchema('goal', 'update-key-result', 'Update a key result', [
+  { flag: '<key-result-id>', type: 'string', required: true, description: 'Key result ID' },
+  { flag: '--name', type: 'string', required: false, description: 'Key result name' },
+  { flag: '--steps-current', type: 'string', required: false, description: 'Current value' },
+  { flag: '--note', type: 'string', required: false, description: 'Progress note' },
+])
+
+registerSchema('goal', 'delete-key-result', 'Delete a key result', [
+  { flag: '<key-result-id>', type: 'string', required: true, description: 'Key result ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
 
 const GOAL_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 20 },

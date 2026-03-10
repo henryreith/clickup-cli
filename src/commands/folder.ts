@@ -3,6 +3,31 @@ import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { FolderListResponse } from '../types/folder.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('folder', 'list', 'List folders in a space', [
+  { flag: '--space-id', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--archived', type: 'boolean', required: false, description: 'Include archived folders' },
+])
+
+registerSchema('folder', 'get', 'Get folder details', [
+  { flag: '<folder-id>', type: 'string', required: true, description: 'Folder ID' },
+])
+
+registerSchema('folder', 'create', 'Create a new folder', [
+  { flag: '--space-id', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Folder name' },
+])
+
+registerSchema('folder', 'update', 'Update a folder', [
+  { flag: '<folder-id>', type: 'string', required: true, description: 'Folder ID' },
+  { flag: '--name', type: 'string', required: false, description: 'New folder name' },
+])
+
+registerSchema('folder', 'delete', 'Delete a folder', [
+  { flag: '<folder-id>', type: 'string', required: true, description: 'Folder ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
 
 const FOLDER_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 14 },

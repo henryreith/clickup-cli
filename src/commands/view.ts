@@ -3,6 +3,45 @@ import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { ViewListResponse, ViewResponse, ViewTasksResponse } from '../types/view.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('view', 'list', 'List views for a workspace, space, folder, or list', [
+  { flag: '--workspace-id', type: 'string', required: false, description: 'Workspace ID (provide one parent)' },
+  { flag: '--space-id', type: 'string', required: false, description: 'Space ID (provide one parent)' },
+  { flag: '--folder-id', type: 'string', required: false, description: 'Folder ID (provide one parent)' },
+  { flag: '--list-id', type: 'string', required: false, description: 'List ID (provide one parent)' },
+])
+
+registerSchema('view', 'get', 'Get a view', [
+  { flag: '<view-id>', type: 'string', required: true, description: 'View ID' },
+])
+
+registerSchema('view', 'create', 'Create a view', [
+  { flag: '--space-id', type: 'string', required: false, description: 'Space ID (provide one parent)' },
+  { flag: '--folder-id', type: 'string', required: false, description: 'Folder ID (provide one parent)' },
+  { flag: '--list-id', type: 'string', required: false, description: 'List ID (provide one parent)' },
+  { flag: '--name', type: 'string', required: true, description: 'View name' },
+  { flag: '--type', type: 'string', required: true, description: 'View type (list, board, calendar, etc.)' },
+])
+
+registerSchema('view', 'update', 'Update a view', [
+  { flag: '<view-id>', type: 'string', required: true, description: 'View ID' },
+  { flag: '--name', type: 'string', required: false, description: 'View name' },
+  { flag: '--settings', type: 'string', required: false, description: 'Settings (JSON string)' },
+  { flag: '--grouping', type: 'string', required: false, description: 'Grouping config (JSON string)' },
+  { flag: '--sorting', type: 'string', required: false, description: 'Sorting config (JSON string)' },
+  { flag: '--filters', type: 'string', required: false, description: 'Filters config (JSON string)' },
+])
+
+registerSchema('view', 'delete', 'Delete a view', [
+  { flag: '<view-id>', type: 'string', required: true, description: 'View ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
+
+registerSchema('view', 'tasks', 'Get tasks in a view', [
+  { flag: '<view-id>', type: 'string', required: true, description: 'View ID' },
+  { flag: '--page', type: 'string', required: false, description: 'Page number (zero-indexed)' },
+])
 
 const VIEW_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 20 },

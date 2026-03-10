@@ -4,6 +4,35 @@ import { resolveWorkspaceId } from '../config.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { SpaceListResponse } from '../types/space.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('space', 'list', 'List spaces in a workspace', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '--archived', type: 'boolean', required: false, description: 'Include archived spaces' },
+])
+
+registerSchema('space', 'get', 'Get space details', [
+  { flag: '<space-id>', type: 'string', required: true, description: 'Space ID' },
+])
+
+registerSchema('space', 'create', 'Create a new space', [
+  { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Space name' },
+  { flag: '--multiple-assignees', type: 'boolean', required: false, description: 'Enable multiple assignees' },
+  { flag: '--features', type: 'string', required: false, description: 'Feature flags as JSON' },
+])
+
+registerSchema('space', 'update', 'Update a space', [
+  { flag: '<space-id>', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--name', type: 'string', required: false, description: 'New space name' },
+  { flag: '--color', type: 'string', required: false, description: 'Space color' },
+  { flag: '--private', type: 'boolean', required: false, description: 'Make space private or public' },
+])
+
+registerSchema('space', 'delete', 'Delete a space', [
+  { flag: '<space-id>', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
 
 const SPACE_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 14 },

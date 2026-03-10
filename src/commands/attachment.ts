@@ -2,6 +2,13 @@ import { Command } from 'commander'
 import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('attachment', 'upload', 'Upload a file to a task', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--file', type: 'string', required: true, description: 'Local file path' },
+  { flag: '--filename', type: 'string', required: false, description: 'Override display filename' },
+])
 
 const ATTACHMENT_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 20 },

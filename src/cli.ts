@@ -21,6 +21,14 @@ import { registerTimeTrackingCommands } from './commands/time-tracking.js'
 import { registerGoalCommands } from './commands/goal.js'
 import { registerViewCommands } from './commands/view.js'
 import { registerWebhookCommands } from './commands/webhook.js'
+import { registerUserCommands } from './commands/user.js'
+import { registerGroupCommands } from './commands/group.js'
+import { registerGuestCommands } from './commands/guest.js'
+import { registerRoleCommands } from './commands/role.js'
+import { registerMemberCommands } from './commands/member.js'
+import { registerTemplateCommands } from './commands/template.js'
+import { registerTaskTypeCommands } from './commands/task-type.js'
+import { registerSchemaCommands } from './commands/schema-cmd.js'
 
 const VERSION = '0.1.0'
 
@@ -103,6 +111,14 @@ export function run(): void {
   registerGoalCommands(program, () => createClient(program))
   registerViewCommands(program, () => createClient(program))
   registerWebhookCommands(program, () => createClient(program))
+  registerUserCommands(program, () => createClient(program))
+  registerGroupCommands(program, () => createClient(program))
+  registerGuestCommands(program, () => createClient(program))
+  registerRoleCommands(program, () => createClient(program))
+  registerMemberCommands(program, () => createClient(program))
+  registerTemplateCommands(program, () => createClient(program))
+  registerTaskTypeCommands(program, () => createClient(program))
+  registerSchemaCommands(program)
 
   program.parseAsync(process.argv).catch((error: unknown) => {
     if (error instanceof ClickUpError) {

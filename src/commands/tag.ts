@@ -3,6 +3,42 @@ import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { TagListResponse } from '../types/tag.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('tag', 'list', 'List tags in a space', [
+  { flag: '--space-id', type: 'string', required: true, description: 'Space ID' },
+])
+
+registerSchema('tag', 'create', 'Create a tag in a space', [
+  { flag: '--space-id', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Tag name' },
+  { flag: '--fg-color', type: 'string', required: false, description: 'Text color hex' },
+  { flag: '--bg-color', type: 'string', required: false, description: 'Background color hex' },
+])
+
+registerSchema('tag', 'update', 'Update a tag in a space', [
+  { flag: '--space-id', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Current tag name' },
+  { flag: '--new-name', type: 'string', required: false, description: 'New tag name' },
+  { flag: '--fg-color', type: 'string', required: false, description: 'New text color' },
+  { flag: '--bg-color', type: 'string', required: false, description: 'New background color' },
+])
+
+registerSchema('tag', 'delete', 'Delete a tag from a space', [
+  { flag: '--space-id', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Tag name' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
+
+registerSchema('tag', 'add', 'Add a tag to a task', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Tag name' },
+])
+
+registerSchema('tag', 'remove', 'Remove a tag from a task', [
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+  { flag: '--name', type: 'string', required: true, description: 'Tag name' },
+])
 
 const TAG_COLUMNS: ColumnDef[] = [
   { key: 'name', header: 'Name', width: 25 },

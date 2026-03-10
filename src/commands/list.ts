@@ -3,6 +3,59 @@ import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { ListListResponse } from '../types/list.js'
+import { registerSchema } from '../schema.js'
+
+registerSchema('list', 'list', 'List lists in a folder', [
+  { flag: '--folder-id', type: 'string', required: true, description: 'Folder ID' },
+  { flag: '--archived', type: 'boolean', required: false, description: 'Include archived lists' },
+])
+
+registerSchema('list', 'list-folderless', 'List folderless lists in a space', [
+  { flag: '--space-id', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--archived', type: 'boolean', required: false, description: 'Include archived lists' },
+])
+
+registerSchema('list', 'get', 'Get list details', [
+  { flag: '<list-id>', type: 'string', required: true, description: 'List ID' },
+])
+
+registerSchema('list', 'create', 'Create a new list in a folder', [
+  { flag: '--folder-id', type: 'string', required: true, description: 'Folder ID' },
+  { flag: '--name', type: 'string', required: true, description: 'List name' },
+  { flag: '--content', type: 'string', required: false, description: 'List description' },
+  { flag: '--due-date', type: 'string', required: false, description: 'Due date (Unix ms)' },
+  { flag: '--priority', type: 'integer', required: false, description: 'Priority (1-4)' },
+  { flag: '--status', type: 'string', required: false, description: 'Default status' },
+])
+
+registerSchema('list', 'create-folderless', 'Create a folderless list in a space', [
+  { flag: '--space-id', type: 'string', required: true, description: 'Space ID' },
+  { flag: '--name', type: 'string', required: true, description: 'List name' },
+  { flag: '--content', type: 'string', required: false, description: 'List description' },
+])
+
+registerSchema('list', 'update', 'Update a list', [
+  { flag: '<list-id>', type: 'string', required: true, description: 'List ID' },
+  { flag: '--name', type: 'string', required: false, description: 'New list name' },
+  { flag: '--content', type: 'string', required: false, description: 'New description' },
+  { flag: '--due-date', type: 'string', required: false, description: 'Due date (Unix ms)' },
+  { flag: '--unset-status', type: 'boolean', required: false, description: 'Remove default status' },
+])
+
+registerSchema('list', 'delete', 'Delete a list', [
+  { flag: '<list-id>', type: 'string', required: true, description: 'List ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
+])
+
+registerSchema('list', 'add-task', 'Add a task to a list', [
+  { flag: '<list-id>', type: 'string', required: true, description: 'List ID' },
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+])
+
+registerSchema('list', 'remove-task', 'Remove a task from a list', [
+  { flag: '<list-id>', type: 'string', required: true, description: 'List ID' },
+  { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
+])
 
 const LIST_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 14 },
