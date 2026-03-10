@@ -112,7 +112,7 @@ export class ClickUpClient {
     body?: unknown,
     params?: Record<string, string | string[] | undefined>,
   ): Promise<T> {
-    let url = `${this.baseUrl}${path}`
+    let url = this.resolveUrl(path)
 
     if (params) {
       const searchParams = new URLSearchParams()
@@ -246,6 +246,14 @@ export class ClickUpClient {
     }
 
     throw lastError ?? new ClickUpError('Request failed after retries', 0, undefined, undefined)
+  }
+
+  private resolveUrl(path: string): string {
+    if (path.startsWith('/v3/')) {
+      const origin = new URL(this.baseUrl).origin
+      return `${origin}/api${path}`
+    }
+    return `${this.baseUrl}${path}`
   }
 
   private logDryRun(method: string, url: string, body: unknown): void {
