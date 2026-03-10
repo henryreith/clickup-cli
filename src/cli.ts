@@ -9,6 +9,13 @@ import { registerWorkspaceCommands } from './commands/workspace.js'
 import { registerSpaceCommands } from './commands/space.js'
 import { registerFolderCommands } from './commands/folder.js'
 import { registerListCommands } from './commands/list.js'
+import { registerTaskCommands } from './commands/task.js'
+import { registerChecklistCommands } from './commands/checklist.js'
+import { registerFieldCommands } from './commands/custom-field.js'
+import { registerTagCommands } from './commands/tag.js'
+import { registerDependencyCommands } from './commands/dependency.js'
+import { registerRelationCommands } from './commands/relation.js'
+import { registerAttachmentCommands } from './commands/attachment.js'
 
 const VERSION = '0.1.0'
 
@@ -79,6 +86,13 @@ export function run(): void {
   registerSpaceCommands(program, () => createClient(program))
   registerFolderCommands(program, () => createClient(program))
   registerListCommands(program, () => createClient(program))
+  registerTaskCommands(program, () => createClient(program))
+  registerChecklistCommands(program, () => createClient(program))
+  registerFieldCommands(program, () => createClient(program))
+  registerTagCommands(program, () => createClient(program))
+  registerDependencyCommands(program, () => createClient(program))
+  registerRelationCommands(program, () => createClient(program))
+  registerAttachmentCommands(program, () => createClient(program))
 
   program.parseAsync(process.argv).catch((error: unknown) => {
     if (error instanceof ClickUpError) {
