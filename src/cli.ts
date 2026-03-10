@@ -18,6 +18,9 @@ import { registerRelationCommands } from './commands/relation.js'
 import { registerAttachmentCommands } from './commands/attachment.js'
 import { registerCommentCommands } from './commands/comment.js'
 import { registerTimeTrackingCommands } from './commands/time-tracking.js'
+import { registerGoalCommands } from './commands/goal.js'
+import { registerViewCommands } from './commands/view.js'
+import { registerWebhookCommands } from './commands/webhook.js'
 
 const VERSION = '0.1.0'
 
@@ -97,6 +100,9 @@ export function run(): void {
   registerAttachmentCommands(program, () => createClient(program))
   registerCommentCommands(program, () => createClient(program))
   registerTimeTrackingCommands(program, () => createClient(program))
+  registerGoalCommands(program, () => createClient(program))
+  registerViewCommands(program, () => createClient(program))
+  registerWebhookCommands(program, () => createClient(program))
 
   program.parseAsync(process.argv).catch((error: unknown) => {
     if (error instanceof ClickUpError) {
