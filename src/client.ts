@@ -42,7 +42,7 @@ export class ClickUpClient {
     this.dryRun = options.dryRun ?? false
   }
 
-  async get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
+  async get<T>(path: string, params?: Record<string, string | string[] | undefined>): Promise<T> {
     return this.request<T>('GET', path, undefined, params)
   }
 
@@ -110,14 +110,17 @@ export class ClickUpClient {
     method: string,
     path: string,
     body?: unknown,
-    params?: Record<string, string | undefined>,
+    params?: Record<string, string | string[] | undefined>,
   ): Promise<T> {
     let url = `${this.baseUrl}${path}`
 
     if (params) {
       const searchParams = new URLSearchParams()
       for (const [key, value] of Object.entries(params)) {
-        if (value !== undefined) {
+        if (value === undefined) continue
+        if (Array.isArray(value)) {
+          for (const v of value) searchParams.append(key, v)
+        } else {
           searchParams.set(key, value)
         }
       }
