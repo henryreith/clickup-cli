@@ -1,6 +1,11 @@
 ---
 name: clickup-weekly-review
-description: Generate a weekly team progress report from ClickUp. Summarizes completed tasks, in-progress work, blockers, and time logged.
+description: Generates a weekly team progress report from ClickUp. Summarizes completed tasks, in-progress work, blockers, and time logged. Use when the user asks for a weekly update, progress report, team summary, or wants to know what happened this week.
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+argument-hint: "[workspace-id or space-id]"
+allowed-tools: Bash(clickup *)
 ---
 
 # Weekly Review

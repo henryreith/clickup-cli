@@ -1,6 +1,11 @@
 ---
 name: clickup-sprint-closeout
-description: Close out a sprint - summarize completion, carry over incomplete tasks, and prepare retro data.
+description: Closes out a sprint by summarizing completion, carrying over incomplete tasks, and preparing retrospective data. Use when the user wants to end a sprint, close out an iteration, move unfinished work, or prepare for a retro.
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+argument-hint: "[sprint-list-id] [next-sprint-list-id]"
+allowed-tools: Bash(clickup *)
 ---
 
 # Sprint Closeout

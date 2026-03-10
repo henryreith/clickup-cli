@@ -1,6 +1,11 @@
 ---
 name: clickup-project-setup
-description: Scaffold a new project in ClickUp - create space, folders, lists, and initial tasks.
+description: Scaffolds a new project in ClickUp by creating a space, folders, lists, tags, and initial tasks. Use when the user wants to set up a new project, create a project structure, or bootstrap a workspace for a new initiative.
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+argument-hint: "[workspace-id] [project-name]"
+allowed-tools: Bash(clickup *)
 ---
 
 # Project Setup

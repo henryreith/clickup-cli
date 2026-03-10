@@ -1,6 +1,7 @@
 ---
 name: clickup-views
-description: Create and manage ClickUp views (board, list, Gantt, calendar, etc.) and retrieve tasks through views.
+description: Creates and manages ClickUp views including board, list, Gantt, calendar, and workload views. Use when the user asks about views, wants to create a kanban board, see tasks through a specific view, or configure view settings.
+allowed-tools: Bash(clickup view *), Bash(clickup schema view*)
 ---
 
 # ClickUp Views

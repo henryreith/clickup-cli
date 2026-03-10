@@ -1,6 +1,11 @@
 ---
 name: clickup-sprint-planning
-description: Plan a sprint by selecting tasks from backlog, assigning them, setting dates, and organizing into a sprint list.
+description: Plans a sprint by selecting tasks from backlog, assigning them, setting dates, and organizing into a sprint list. Use when the user wants to plan a sprint, set up an iteration, or pull work from backlog into a sprint.
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+argument-hint: "[backlog-list-id] [sprint-name]"
+allowed-tools: Bash(clickup *)
 ---
 
 # Sprint Planning

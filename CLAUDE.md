@@ -129,8 +129,14 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 - Register field definitions in `src/schema.ts` for every command action
 - Schema definitions are derived from the same Zod schemas used for validation
 - When adding a new command group, create/update the corresponding skill in `skills/`
-- Skill files follow the Anthropic Agent Skills standard (YAML frontmatter + markdown)
+- Skill files follow the [Anthropic Agent Skills standard](https://agentskills.io) (YAML frontmatter + markdown)
 - Keep sub-skills under 300 lines; keep recipe skills under 400 lines
+- Descriptions in third person ("Creates tasks" not "Create tasks")
+- Descriptions must include BOTH what it does AND when to use it ("Use when...")
+- Root skill: set `user-invocable: false` (background knowledge only)
+- Sub-skills: add `allowed-tools` scoped to relevant `clickup` subcommands
+- Recipe skills: set `disable-model-invocation: true`, `context: fork`, `agent: general-purpose`, `allowed-tools: Bash(clickup *)`
+- Recipe skills should accept `$ARGUMENTS` for parameterized invocation
 
 ## Key Design Decisions
 

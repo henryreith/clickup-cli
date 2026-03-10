@@ -653,12 +653,43 @@ The CLI ships with a hierarchical skills system that enables AI agents to use Cl
 
 **Skill file format:**
 
-Every skill is a directory containing a `SKILL.md` file following the Anthropic Agent Skills standard:
+Every skill is a directory containing a `SKILL.md` file following the [Anthropic Agent Skills standard](https://agentskills.io). Skills use YAML frontmatter for metadata and markdown for instructions.
+
+**Frontmatter reference:**
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | No (uses dir name) | Lowercase letters, numbers, and hyphens. Max 64 characters. |
+| `description` | Recommended | What the skill does AND when to use it. Written in third person. Max 1024 characters. |
+| `allowed-tools` | No | Tools the agent can use without asking permission. Use `Bash(clickup *)` to scope to CLI commands. |
+| `disable-model-invocation` | No | Set `true` to prevent auto-loading. User must invoke with `/name`. Default: `false`. |
+| `user-invocable` | No | Set `false` to hide from slash command menu. For background knowledge only. Default: `true`. |
+| `argument-hint` | No | Autocomplete hint for expected arguments. E.g., `[workspace-id]`. |
+| `context` | No | Set to `fork` to run in an isolated subagent context. |
+| `agent` | No | Subagent type when `context: fork` is set. E.g., `general-purpose`, `Explore`. |
+
+**Frontmatter conventions for this project:**
+
+| Skill tier | `user-invocable` | `disable-model-invocation` | `context` | `allowed-tools` |
+|------------|-------------------|---------------------------|-----------|-----------------|
+| Root skill | `false` | (default) | (default) | (none) |
+| Sub-skills | (default) | (default) | (default) | Scoped to relevant `clickup` subcommands |
+| Recipe skills | (default) | `true` | `fork` | `Bash(clickup *)` |
+
+Root skill is background knowledge (never a slash command). Sub-skills are auto-discoverable by the agent. Recipe skills require explicit user invocation via `/recipe-name` because they orchestrate multi-step workflows with side effects.
+
+**Description best practices:**
+
+- Write in third person ("Creates tasks" not "Create tasks" or "I create tasks")
+- Include BOTH what it does AND when to use it
+- Include natural trigger phrases ("Use when the user asks about...")
+- Be specific enough for accurate skill selection
 
 ```markdown
 ---
 name: clickup-tasks
-description: Create, update, search, and manage ClickUp tasks, subtasks, checklists, and dependencies.
+description: Creates, updates, searches, and manages ClickUp tasks, subtasks, checklists, dependencies, and attachments. Use when the user asks about tasks, wants to create or find work items, manage subtasks, or set dependencies.
+allowed-tools: Bash(clickup task *), Bash(clickup checklist *), Bash(clickup dependency *)
 ---
 
 # ClickUp Tasks
@@ -675,9 +706,17 @@ description: Create, update, search, and manage ClickUp tasks, subtasks, checkli
 [How to get more detail: `clickup schema tasks.create`, `clickup task --help`]
 ```
 
-Required frontmatter fields:
-- `name`: Unique identifier (lowercase, hyphens)
-- `description`: When to use this skill (used by agent platforms for skill discovery)
+**Dynamic substitutions:**
+
+Skills support string substitution for runtime values:
+
+| Variable | Description |
+|----------|-------------|
+| `$ARGUMENTS` | All arguments passed when invoking the skill |
+| `$0`, `$1`, ... | Individual arguments by position |
+| `${CLAUDE_SKILL_DIR}` | Directory containing the SKILL.md file |
+
+Recipe skills use `$ARGUMENTS` for parameterized invocation: `/weekly-review 9876543` passes the workspace ID as `$0`.
 
 **Skill distribution:**
 
@@ -694,9 +733,16 @@ Agent platforms discover skills through their own conventions:
 
 | Platform | Discovery path |
 |----------|---------------|
-| Claude Code | `skills/` directory in project root (auto-discovered) |
+| Claude Code | `.claude/skills/` or project `skills/` directory (auto-discovered) |
+| Claude Desktop | Upload skills individually via skill management |
+| Claude API | Upload via API skill endpoints (no network access in skills) |
 | Gemini CLI | Symlink or copy to `~/.gemini/skills/` |
 | Custom agents | Read `skills/clickup/SKILL.md` or run `clickup skill show clickup` |
+
+**Cross-platform notes:**
+- Skills do not sync across platforms. Install separately for each target.
+- Claude API skills have no network access. CLI commands work because the agent invokes them via Bash, not from within the skill itself.
+- Keep SKILL.md under 500 lines. Move detailed reference material to supporting files (e.g., `reference.md`, `examples.md`) alongside SKILL.md.
 
 ### 12.3 Schema Introspection
 
@@ -935,12 +981,16 @@ clickup list tags <list-id>
 
 ```
 clickup task list --list-id <id> [filter options] [--page <n>] [--limit <n>]
-clickup task get <task-id> [--include-subtasks] [--custom-fields]
+clickup task search --workspace-id <id> [--query <text>] [filter options] [--page <n>] [--limit <n>]
+clickup task get <task-id> [--include-subtasks] [--custom-fields] [--include-markdown-description]
 clickup task create --list-id <id> --name <name> [create options]
 clickup task update <task-id> [update options]
 clickup task delete <task-id> [--confirm]
 clickup task move <task-id> --list-id <id>
 clickup task duplicate <task-id>
+clickup task merge <task-id> --merge-with <task-id>
+clickup task time-in-status <task-id>
+clickup task bulk-time-in-status --task-id <id>...
 clickup task subtasks <task-id>
 clickup task members <task-id>
 clickup task tags <task-id>
@@ -1011,10 +1061,15 @@ clickup checklist item delete <checklist-item-id> [--confirm]
 
 ```
 clickup custom-field list --list-id <id>
+clickup custom-field list --folder-id <id>
+clickup custom-field list --space-id <id>
+clickup custom-field list --workspace-id <id>
 clickup custom-field get <field-id>
 clickup custom-field set --task-id <id> --field-id <id> --value <value>
 clickup custom-field unset --task-id <id> --field-id <id>
 ```
+
+Custom field list routes to different API endpoints based on which ID flag is provided. Lists fields accessible at each hierarchy level.
 
 The `--value` for `set` accepts:
 - Plain string for text/email/url/phone
@@ -1029,6 +1084,7 @@ The `--value` for `set` accepts:
 ```
 clickup tag list --space-id <id>
 clickup tag create --space-id <id> --name <name> [--fg-color <hex>] [--bg-color <hex>]
+clickup tag update --space-id <id> --name <name> [--new-name <name>] [--fg-color <hex>] [--bg-color <hex>]
 clickup tag delete --space-id <id> --name <name> [--confirm]
 clickup tag add --task-id <id> --name <name>
 clickup tag remove --task-id <id> --name <name>
@@ -1049,14 +1105,19 @@ clickup relation remove --task-id <id> --relates-to <task-id>
 
 ```
 clickup time list --task-id <id>
-clickup time get <time-entry-id> [--team-id <id>]
-clickup time start --task-id <id> [--description <text>] [--billable]
-clickup time stop [--team-id <id>]
-clickup time current [--team-id <id>]
-clickup time create --task-id <id> --start <date> --duration <ms> [--description <text>] [--billable] [--tags <tag,...>]
-clickup time update <time-entry-id> [--start <date>] [--duration <ms>] [--description <text>] [--billable]
-clickup time delete <time-entry-id> [--confirm]
-clickup time tags --team-id <id>
+clickup time list --workspace-id <id> --start <date> --end <date> [--assignee <id>...]
+clickup time get <time-entry-id> [--workspace-id <id>]
+clickup time history <time-entry-id> [--workspace-id <id>]
+clickup time start --task-id <id> [--workspace-id <id>] [--description <text>] [--billable] [--tag <name>...]
+clickup time stop [--workspace-id <id>]
+clickup time current [--workspace-id <id>] [--assignee <id>]
+clickup time create --task-id <id> --start <date> --duration <ms> [--description <text>] [--billable] [--tag <name>...]
+clickup time update <time-entry-id> [--workspace-id <id>] [--start <date>] [--duration <ms>] [--description <text>] [--billable]
+clickup time delete <time-entry-id> [--workspace-id <id>]
+clickup time tags [--workspace-id <id>]
+clickup time add-tags --time-entry-id <id>... --tag <name>... [--workspace-id <id>]
+clickup time remove-tags --time-entry-id <id>... --tag <name>... [--workspace-id <id>]
+clickup time rename-tag --name <old> --new-name <new> [--workspace-id <id>]
 ```
 
 ### 14.12 Goal
@@ -1083,6 +1144,7 @@ clickup view list-folder --folder-id <id>
 clickup view list-list --list-id <id>
 clickup view get <view-id>
 clickup view create --name <name> [--space-id|--folder-id|--list-id <id>] [--type <board|list|box|calendar|gantt|map|workload>]
+clickup view update <view-id> [--name <name>] [--settings <json>] [--grouping <json>] [--sorting <json>] [--filters <json>]
 clickup view delete <view-id> [--confirm]
 clickup view tasks <view-id> [--page <n>]
 ```
@@ -1150,7 +1212,13 @@ Events: `taskCreated`, `taskUpdated`, `taskDeleted`, `taskPriorityUpdated`, `tas
 
 ```
 clickup template list [--workspace-id <id>] [--page <n>]
+clickup template apply-task --list-id <id> --template-id <id> [--name <name>]
+clickup template apply-list --folder-id <id> --template-id <id> [--name <name>]
+clickup template apply-list --space-id <id> --template-id <id> [--name <name>]
+clickup template apply-folder --space-id <id> --template-id <id> [--name <name>]
 ```
+
+Template application creates resources from existing templates. The `apply-task` command creates a task from a task template. The `apply-list` and `apply-folder` commands create lists and folders from their respective templates.
 
 ### 14.21 Shared Hierarchy
 
@@ -1174,6 +1242,8 @@ clickup attachment upload --task-id <id> --file <path> [--filename <name>]
 
 ### 14.24 Doc
 
+Uses ClickUp API v3 doc endpoints for full functionality.
+
 ```
 clickup doc list [--workspace-id <id>]
 clickup doc get <doc-id> [--workspace-id <id>]
@@ -1181,9 +1251,9 @@ clickup doc create --name <name> [--workspace-id <id>] [--parent-type <workspace
 clickup doc update <doc-id> [--name <name>] [--visibility <public|private>]
 clickup doc delete <doc-id> [--confirm]
 clickup doc pages <doc-id> [--workspace-id <id>]
-clickup doc page get --doc-id <id> --page-id <id>
-clickup doc page create --doc-id <id> --name <name> [--content <markdown>] [--content-format <md|html>]
-clickup doc page update --doc-id <id> --page-id <id> [--name <name>] [--content <markdown>]
+clickup doc page get --doc-id <id> --page-id <id> [--workspace-id <id>]
+clickup doc page create --doc-id <id> --name <name> [--workspace-id <id>] [--content <markdown>] [--content-format <md|html>]
+clickup doc page update --doc-id <id> --page-id <id> [--workspace-id <id>] [--name <name>] [--content <markdown>]
 ```
 
 ### 14.25 Auth

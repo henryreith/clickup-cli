@@ -1,6 +1,7 @@
 ---
 name: clickup-comments
-description: Create, list, and manage comments on ClickUp tasks, lists, and views. Supports threading and replies.
+description: Creates, lists, and manages comments on ClickUp tasks, lists, and views. Supports threading and replies. Use when the user wants to add comments, read discussion threads, reply to comments, or assign action items via comments.
+allowed-tools: Bash(clickup comment *), Bash(clickup schema comment*)
 ---
 
 # ClickUp Comments

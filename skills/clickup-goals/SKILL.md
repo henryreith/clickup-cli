@@ -1,6 +1,7 @@
 ---
 name: clickup-goals
-description: Create and manage ClickUp goals with measurable key results for OKR tracking.
+description: Creates and manages ClickUp goals with measurable key results for OKR tracking. Use when the user asks about goals, OKRs, key results, objectives, progress tracking, or wants to set targets and measure completion.
+allowed-tools: Bash(clickup goal *), Bash(clickup schema goal*)
 ---
 
 # ClickUp Goals

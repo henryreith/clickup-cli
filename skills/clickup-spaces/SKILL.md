@@ -1,6 +1,7 @@
 ---
 name: clickup-spaces
-description: Navigate and manage the ClickUp hierarchy - workspaces, spaces, folders, and lists.
+description: Navigates and manages the ClickUp hierarchy including workspaces, spaces, folders, and lists. Use when the user asks about project structure, wants to create spaces or lists, navigate the hierarchy, or find where tasks live.
+allowed-tools: Bash(clickup workspace *), Bash(clickup space *), Bash(clickup folder *), Bash(clickup list *), Bash(clickup schema workspace*), Bash(clickup schema space*), Bash(clickup schema folder*), Bash(clickup schema list*)
 ---
 
 # ClickUp Spaces (Hierarchy)

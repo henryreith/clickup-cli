@@ -1,6 +1,11 @@
 ---
 name: clickup-capacity-check
-description: Check team workload and capacity - see who is overloaded, who has bandwidth, and balance assignments.
+description: Checks team workload and capacity by analyzing who is overloaded, who has bandwidth, and suggesting rebalancing. Use when the user asks about team capacity, workload, who is overloaded, or wants to balance task assignments.
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+argument-hint: "[workspace-id]"
+allowed-tools: Bash(clickup *)
 ---
 
 # Capacity Check

@@ -1,6 +1,7 @@
 ---
 name: clickup
-description: Manage ClickUp projects, tasks, spaces, lists, time tracking, goals, and more via CLI. Load this skill when the user needs to interact with ClickUp data.
+description: Manages ClickUp projects, tasks, spaces, lists, time tracking, goals, and more via CLI. Use when the user needs to create tasks, check project status, manage sprints, track time, find work items, or interact with ClickUp data in any way.
+user-invocable: false
 ---
 
 # ClickUp CLI

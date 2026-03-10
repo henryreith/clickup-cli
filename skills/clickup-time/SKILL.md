@@ -1,6 +1,7 @@
 ---
 name: clickup-time
-description: Track time in ClickUp - log entries, manage running timers, tag time, and generate reports.
+description: Tracks time in ClickUp including logging entries, managing running timers, tagging time, and querying reports. Use when the user asks about time tracking, wants to start or stop a timer, log hours, check who is working on what, or audit time entries.
+allowed-tools: Bash(clickup time *), Bash(clickup schema time*)
 ---
 
 # ClickUp Time Tracking

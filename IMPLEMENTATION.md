@@ -110,8 +110,9 @@ The largest and most complex resource. Take time to get this right since it sets
 
 ### Step 15: Task Commands
 - Types: src/types/task.ts (largest schema)
-- Commands: list (with all filter flags), search, get, create, update, delete, time-in-status, bulk-time-in-status
+- Commands: list (with all filter flags), search, get, create, update, delete, move, duplicate, merge, time-in-status, bulk-time-in-status
 - Handle subtask creation via --parent flag
+- Task merge: POST /task/{id}/merge
 - Implement all query param filters for list and search
 - API paths: GET /list/{id}/task, GET /team/{id}/task (search), POST /list/{id}/task, etc.
 
@@ -122,8 +123,9 @@ The largest and most complex resource. Take time to get this right since it sets
 
 ### Step 17: Custom Field Commands
 - Types: src/types/custom-field.ts
-- Commands: list (by list-id), set (on task), remove (from task)
-- API paths: GET /list/{id}/field, POST /task/{id}/field/{fid}, DELETE /task/{id}/field/{fid}
+- Commands: list (by list-id, folder-id, space-id, or workspace-id), set (on task), remove (from task)
+- Polymorphic list: routes to correct API endpoint based on which ID flag is provided
+- API paths: GET /list/{id}/field, GET /folder/{id}/field, GET /space/{id}/field, GET /team/{id}/field, POST /task/{id}/field/{fid}, DELETE /task/{id}/field/{fid}
 
 ### Step 18: Tag Commands
 - Types: src/types/tag.ts
@@ -153,9 +155,11 @@ The largest and most complex resource. Take time to get this right since it sets
 
 ### Step 22: Time Tracking Commands
 - Types: src/types/time-tracking.ts
-- Commands: list (by task or workspace), get, create, update, delete, history, running, start, stop, tags, add-tags, remove-tags, rename-tag
+- Commands: list (by task or workspace with date range), get, create, update, delete, history, current, start, stop, tags, add-tags, remove-tags, rename-tag
 - Handle running timer state
-- API paths: GET /task/{id}/time, POST /task/{id}/time, GET /team/{id}/time_entries, etc.
+- Workspace-level listing with date range filters and assignee filter
+- Time entry tag management (add/remove/rename) as separate operations
+- API paths: GET /task/{id}/time, POST /task/{id}/time, GET /team/{id}/time_entries, GET /team/{id}/time_entries/current, POST /team/{id}/time_entries/start, POST /team/{id}/time_entries/stop, etc.
 
 **Milestone: Can manage comments and track time from CLI.**
 
@@ -213,8 +217,9 @@ The largest and most complex resource. Take time to get this right since it sets
 ## Phase 7: Remaining Resources & Polish
 
 ### Step 31: Template Commands
-- Commands: list
-- API path: GET /team/{id}/taskTemplate
+- Commands: list, apply-task, apply-list, apply-folder
+- List: GET /team/{id}/taskTemplate
+- Apply: POST /list/{id}/taskTemplate/{tid}, POST /folder/{id}/listTemplate/{tid}, POST /space/{id}/listTemplate/{tid}, POST /space/{id}/folderTemplate/{tid}
 
 ### Step 32: Custom Task Type Commands
 - Commands: list
@@ -224,9 +229,10 @@ The largest and most complex resource. Take time to get this right since it sets
 - Commands: get
 - API path: GET /team/{id}/shared
 
-### Step 34: Doc Commands (if v2 endpoints exist)
-- Commands: search
-- API path: GET /team/{id}/doc (if available)
+### Step 34: Doc Commands (v3 endpoints)
+- Commands: list, get, create, update, delete, pages, page-get, page-create, page-update
+- Uses ClickUp API v3 doc endpoints for full functionality
+- API paths: GET /v3/workspaces/{id}/docs, POST /v3/workspaces/{id}/docs, GET /v3/workspaces/{id}/docs/{id}/pages, etc.
 
 ### Step 35: OAuth2 Flow
 - Implement full OAuth2 flow in src/auth.ts

@@ -1,6 +1,7 @@
 ---
 name: clickup-webhooks
-description: Register and manage ClickUp webhooks for real-time event notifications.
+description: Registers and manages ClickUp webhooks for real-time event notifications. Use when the user asks about webhooks, wants to set up notifications for task changes, or needs to integrate ClickUp events with external services.
+allowed-tools: Bash(clickup webhook *), Bash(clickup schema webhook*)
 ---
 
 # ClickUp Webhooks

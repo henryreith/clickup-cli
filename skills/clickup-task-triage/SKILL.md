@@ -1,6 +1,11 @@
 ---
 name: clickup-task-triage
-description: Triage incoming ClickUp tasks - categorize, prioritize, assign, and route unprocessed tasks.
+description: Triages incoming ClickUp tasks by categorizing, prioritizing, assigning, and routing unprocessed tasks. Use when the user wants to triage tasks, sort through a backlog, prioritize incoming work, or clean up an inbox list.
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+argument-hint: "[inbox-list-id]"
+allowed-tools: Bash(clickup *)
 ---
 
 # Task Triage
