@@ -26,6 +26,19 @@ npm test           # vitest
 npm run typecheck  # tsc --noEmit
 ```
 
+## CI/CD
+
+- **CI** (`.github/workflows/ci.yml`): Runs typecheck, tests, and build on every push/PR to `main`
+- **Publish** (`.github/workflows/publish.yml`): Auto-publishes to npm with provenance on `v*` tag push
+- Requires `NPM_TOKEN` secret in GitHub repo settings
+
+### Releasing
+
+```bash
+npm version patch   # bumps version, creates git tag
+git push --follow-tags   # triggers publish workflow
+```
+
 ## Code Conventions
 
 ### General

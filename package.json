@@ -26,6 +26,10 @@
     "project-management",
     "tasks"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/henryreith/clickup-cli.git"
+  },
   "author": "Henry Reith",
   "license": "MIT",
   "dependencies": {
