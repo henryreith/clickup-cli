@@ -1137,22 +1137,46 @@ clickup webhook delete wh_001 --confirm
 
 ## Templates
 
-Templates provide reusable list and task structures. Currently read-only via the API.
+Templates provide reusable task, list, and folder structures that can be applied to create new items.
 
 ```
 clickup template list --workspace-id <id> [--page <n>]
+clickup template apply-task --list-id <id> --template-id <id> [--name <name>]
+clickup template apply-list --folder-id <id> --template-id <id> [--name <name>]
+clickup template apply-folder --space-id <id> --template-id <id> [--name <name>]
 ```
+
+| Command | Description |
+|---------|-------------|
+| `template list` | List task templates in a workspace |
+| `template apply-task` | Create a task from a template |
+| `template apply-list` | Create a list from a template |
+| `template apply-folder` | Create a folder from a template |
 
 | Flag | Description |
 |------|-------------|
 | `--workspace-id <id>` | Workspace to list templates for |
 | `--page <n>` | Page number (100 results per page) |
+| `--list-id <id>` | List to create the task in (apply-task) |
+| `--folder-id <id>` | Folder to create the list in (apply-list) |
+| `--space-id <id>` | Space to create the folder in (apply-folder) |
+| `--template-id <id>` | Template ID to apply |
+| `--name <name>` | Override the default name from the template |
 
 **Examples**
 
 ```bash
 # List all available templates in the workspace
 clickup template list --workspace-id 9876543
+
+# Create a task from a template
+clickup template apply-task --list-id 12345 --template-id tmpl_001
+
+# Create a list from a template with a custom name
+clickup template apply-list --folder-id 67890 --template-id tmpl_002 --name "Sprint 42"
+
+# Create a folder from a template
+clickup template apply-folder --space-id 11111 --template-id tmpl_003
 ```
 
 ---

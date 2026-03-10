@@ -79,4 +79,58 @@ describe('template commands', () => {
       expect(exitSpy).toHaveBeenCalledWith(2)
     })
   })
+
+  describe('template apply-task', () => {
+    it('calls POST /list/{id}/taskTemplate/{tid}', async () => {
+      const { program, mockClient } = createTestProgram()
+      ;(mockClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'task1', name: 'New Task' })
+
+      await program.parseAsync([
+        'node', 'clickup', 'template', 'apply-task',
+        '--list-id', 'list1', '--template-id', 'tmpl1', '--format', 'json',
+      ])
+
+      expect(mockClient.post).toHaveBeenCalledWith('/list/list1/taskTemplate/tmpl1', {})
+    })
+
+    it('sends name override in body', async () => {
+      const { program, mockClient } = createTestProgram()
+      ;(mockClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'task1', name: 'Custom' })
+
+      await program.parseAsync([
+        'node', 'clickup', 'template', 'apply-task',
+        '--list-id', 'list1', '--template-id', 'tmpl1', '--name', 'Custom', '--format', 'json',
+      ])
+
+      expect(mockClient.post).toHaveBeenCalledWith('/list/list1/taskTemplate/tmpl1', { name: 'Custom' })
+    })
+  })
+
+  describe('template apply-list', () => {
+    it('calls POST /folder/{id}/listTemplate/{tid}', async () => {
+      const { program, mockClient } = createTestProgram()
+      ;(mockClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'list1', name: 'New List' })
+
+      await program.parseAsync([
+        'node', 'clickup', 'template', 'apply-list',
+        '--folder-id', 'folder1', '--template-id', 'tmpl1', '--format', 'json',
+      ])
+
+      expect(mockClient.post).toHaveBeenCalledWith('/folder/folder1/listTemplate/tmpl1', {})
+    })
+  })
+
+  describe('template apply-folder', () => {
+    it('calls POST /space/{id}/folderTemplate/{tid}', async () => {
+      const { program, mockClient } = createTestProgram()
+      ;(mockClient.post as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'folder1', name: 'New Folder' })
+
+      await program.parseAsync([
+        'node', 'clickup', 'template', 'apply-folder',
+        '--space-id', 'space1', '--template-id', 'tmpl1', '--format', 'json',
+      ])
+
+      expect(mockClient.post).toHaveBeenCalledWith('/space/space1/folderTemplate/tmpl1', {})
+    })
+  })
 })
