@@ -16,6 +16,8 @@ import { registerTagCommands } from './commands/tag.js'
 import { registerDependencyCommands } from './commands/dependency.js'
 import { registerRelationCommands } from './commands/relation.js'
 import { registerAttachmentCommands } from './commands/attachment.js'
+import { registerCommentCommands } from './commands/comment.js'
+import { registerTimeTrackingCommands } from './commands/time-tracking.js'
 
 const VERSION = '0.1.0'
 
@@ -93,6 +95,8 @@ export function run(): void {
   registerDependencyCommands(program, () => createClient(program))
   registerRelationCommands(program, () => createClient(program))
   registerAttachmentCommands(program, () => createClient(program))
+  registerCommentCommands(program, () => createClient(program))
+  registerTimeTrackingCommands(program, () => createClient(program))
 
   program.parseAsync(process.argv).catch((error: unknown) => {
     if (error instanceof ClickUpError) {
