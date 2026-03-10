@@ -41,14 +41,18 @@ clickup <resource> <action> --help     # Full help text
 | `clickup-webhooks` | Webhook registration and management |
 | `clickup-fields` | Custom fields, tags, custom task types |
 
-## Recipe Skills (load for multi-step workflows)
+## Recipe Skills (multi-step workflows)
+
+Recipes accept natural language arguments. Scope them to any team, department, person, or project.
 
 | Skill | Workflow |
 |-------|----------|
-| `clickup-weekly-review` | Generate a weekly team progress report |
+| `clickup-weekly-review` | Weekly progress report for any team or scope |
+| `clickup-team-report` | Department/team status rundown (marketing, engineering, ops, etc.) |
+| `clickup-custom-report` | Any ad-hoc query or filtered report |
 | `clickup-sprint-planning` | Plan a sprint from backlog |
 | `clickup-task-triage` | Triage and prioritize incoming tasks |
-| `clickup-standup` | Generate a daily standup summary |
+| `clickup-standup` | Daily standup summary for a person or team |
 | `clickup-sprint-closeout` | Close a sprint, carry over incomplete work |
 | `clickup-time-audit` | Audit time tracking and utilization |
 | `clickup-project-setup` | Scaffold a new project structure |
@@ -79,3 +83,26 @@ All commands support: `--format json|table|csv|quiet|id`, `--dry-run`, `--debug`
 ## Auth
 
 Requires a ClickUp API token. Check status with `clickup auth status`.
+
+## Creating Custom Skills
+
+Users can create their own skills alongside the built-in ones. Add a SKILL.md to `.claude/skills/<name>/` in any project:
+
+```yaml
+---
+name: marketing-weekly
+description: Weekly marketing department review
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+allowed-tools: Bash(clickup *)
+---
+
+Generate a marketing department weekly review:
+1. Get all tasks in the Marketing space (space ID: YOUR_SPACE_ID)
+2. Focus on campaign tasks, content pipeline, and ad performance items
+3. Highlight completed deliverables and upcoming deadlines
+4. Flag any blocked creative reviews
+```
+
+This creates `/marketing-weekly` as a custom skill that works alongside the built-in `/clickup:*` skills.

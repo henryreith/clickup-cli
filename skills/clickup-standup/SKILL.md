@@ -4,7 +4,7 @@ description: Generates a daily standup summary from ClickUp covering what was do
 disable-model-invocation: true
 context: fork
 agent: general-purpose
-argument-hint: "[workspace-id] [user-id]"
+argument-hint: "[scope - e.g. 'my tasks', 'engineering team', user-id]"
 allowed-tools: Bash(clickup *)
 ---
 
@@ -12,10 +12,14 @@ allowed-tools: Bash(clickup *)
 
 Generate a standup report covering yesterday's progress, today's plan, and current blockers.
 
-## Prerequisites
+## Understanding the Scope
 
-- Workspace ID configured
-- Know the assignee user ID(s) for the standup
+Interpret `$ARGUMENTS` to determine who the standup is for:
+
+- **"my tasks"** or no arguments: Use the authenticated user
+- **A person's name**: Find their user ID via `clickup user list` or `clickup member list`
+- **A team/space name**: Get all members of that space and generate a team standup
+- **A user ID**: Use directly
 
 ## Workflow
 

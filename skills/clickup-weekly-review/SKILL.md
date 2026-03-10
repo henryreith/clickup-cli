@@ -1,35 +1,54 @@
 ---
 name: clickup-weekly-review
-description: Generates a weekly team progress report from ClickUp. Summarizes completed tasks, in-progress work, blockers, and time logged. Use when the user asks for a weekly update, progress report, team summary, or wants to know what happened this week.
+description: Generates a weekly progress report from ClickUp, scoped to any team, department, space, or workspace. Summarizes completed tasks, in-progress work, blockers, and time logged. Use when the user asks for a weekly update, progress report, team summary, department rundown, or wants to know what happened this week.
 disable-model-invocation: true
 context: fork
 agent: general-purpose
-argument-hint: "[workspace-id or space-id]"
+argument-hint: "[scope - e.g. 'marketing team', space-id, or workspace-id]"
 allowed-tools: Bash(clickup *)
 ---
 
 # Weekly Review
 
-Generate a comprehensive weekly progress report for a team or workspace.
+Generate a weekly progress report scoped to whatever the user asks about.
 
-## Prerequisites
+## Understanding the Scope
 
-- Workspace ID configured (`clickup config set workspace_id <id>`)
-- Know the relevant space/list IDs for the team
+The user's request determines what to report on. Interpret `$ARGUMENTS` to figure out the right filters:
+
+- **Workspace-wide**: Use `--workspace-id` only
+- **A specific space** (e.g. "marketing", "engineering"): Find the space ID first with `clickup space list`, then filter with `--space-id`
+- **A specific list or folder**: Filter by `--list-id` or `--folder-id`
+- **A specific person**: Filter with `--assignee`
+- **A department or team name**: Search spaces/folders for matching names, then scope to those IDs
+
+If no scope is provided, report on the full workspace.
 
 ## Workflow
 
-### Step 1: Gather completed tasks this week
+### Step 1: Resolve the scope
 
 ```bash
-# Find tasks updated this week that are in a "closed" or "complete" status
+# If user gave a name (e.g. "marketing"), find the matching space/folder/list
+clickup space list --format json
+
+# If user gave an ID, use it directly
+# If no scope, use the configured workspace
+```
+
+### Step 2: Gather completed tasks this week
+
+```bash
+# Find tasks completed this week (adjust timestamps for current week)
 clickup task search --workspace-id <id> \
   --date-updated-gt <monday-timestamp-ms> \
   --status "complete" --status "closed" \
   --format json
 ```
 
-### Step 2: Gather in-progress tasks
+Add `--space-id`, `--list-id`, or `--assignee` filters based on the resolved scope.
+
+### Step 3: Gather in-progress tasks
 
 ```bash
 clickup task search --workspace-id <id> \
@@ -37,7 +56,7 @@ clickup task search --workspace-id <id> \
   --format json
 ```
 
-### Step 3: Find overdue tasks
+### Step 4: Find overdue tasks
 
 ```bash
 clickup task search --workspace-id <id> \
@@ -46,7 +65,7 @@ clickup task search --workspace-id <id> \
   --format json
 ```
 
-### Step 4: Gather time logged this week
+### Step 5: Gather time logged this week
 
 ```bash
 clickup time list --workspace-id <id> \
@@ -54,29 +73,33 @@ clickup time list --workspace-id <id> \
   --format json
 ```
 
-### Step 5: Check goal progress
+### Step 6: Check goal progress (if applicable)
 
 ```bash
 clickup goal list --workspace-id <id> --format json
 ```
 
-### Step 6: Compile the report
+### Step 7: Compile the report
 
-Summarize the data into sections:
-- **Completed this week**: Count and list of finished tasks
+Summarize the data into a clear report with sections:
+- **Completed this week**: Count and highlights of finished tasks
 - **In progress**: Tasks actively being worked on
 - **Overdue / Blocked**: Tasks past due or stuck
-- **Time logged**: Total hours, by person if available
-- **Goal progress**: Key result updates
+- **Time logged**: Total hours, broken down by person if available
+- **Goal progress**: Key result updates (if goals exist for this scope)
 
 ## Customization
 
-- Filter by space: add `--space-id <id>` to search commands
-- Filter by assignee: add `--assignee <id>` to narrow to one person
-- Adjust date range by modifying timestamps (use Monday-Friday of the target week)
+The user can refine the report with natural language:
+- "Weekly review for the marketing space" -> filter by marketing space ID
+- "What did Sarah do this week?" -> filter by assignee
+- "Engineering team weekly update" -> find engineering space, filter
+- "Weekly review for list 12345" -> filter by specific list
+- "Give me last week's review" -> adjust date range to previous week
 
 ## Tips
 
 - Use `--format json` for all data gathering, then format the summary as markdown
 - Timestamps are Unix milliseconds. Monday at midnight = start of week
+- If a team/department name doesn't match a space, check folder names too
 - Combine with `clickup comment create` to post the summary back to a task or list

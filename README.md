@@ -137,7 +137,38 @@ clickup skill show clickup-weekly-review
 **Three skill tiers:**
 - **Root skill** - Index and router. What the CLI does, how to discover more.
 - **Sub-skills** (9) - Per-resource command reference. Tasks, spaces, comments, time tracking, etc.
-- **Recipe skills** (10) - Multi-step workflow guides. Sprint planning, weekly review, task triage, etc.
+- **Recipe skills** (12) - Multi-step workflow guides that accept natural language arguments. Scope any recipe to a specific team, department, or person.
+
+**Example recipe invocations:**
+```bash
+/clickup:weekly-review marketing team
+/clickup:team-report engineering
+/clickup:standup Sarah's tasks
+/clickup:custom-report all high-priority tasks with no assignee
+/clickup:capacity-check design team
+```
+
+### Create Your Own Skills
+
+Add custom skills to any project. Create `.claude/skills/<name>/SKILL.md`:
+
+```yaml
+---
+name: marketing-weekly
+description: Weekly marketing department review
+disable-model-invocation: true
+context: fork
+agent: general-purpose
+allowed-tools: Bash(clickup *)
+---
+
+Generate a marketing department weekly review focused on:
+1. Campaign tasks in the Marketing space (space ID: YOUR_ID)
+2. Content pipeline status
+3. Upcoming launch deadlines
+```
+
+This creates `/marketing-weekly` alongside the built-in `/clickup:*` skills.
 
 ### Cross-Platform Agent Support
 

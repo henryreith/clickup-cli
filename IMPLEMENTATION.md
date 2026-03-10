@@ -270,19 +270,23 @@ The largest and most complex resource. Take time to get this right since it sets
 - Cross-references to related sub-skills where relevant
 
 ### Step 40: Recipe Skills
-- 10 recipe skills for common PM workflows:
-  - clickup-weekly-review: generate weekly team progress report
+- 12 recipe skills for common PM workflows:
+  - clickup-weekly-review: weekly progress report, scoped to any team/department/space
+  - clickup-team-report: department or team status rundown (marketing, engineering, ops, etc.)
+  - clickup-custom-report: any ad-hoc query or filtered report from natural language
   - clickup-sprint-planning: set up sprint with tasks from backlog
   - clickup-task-triage: sort and prioritize incoming tasks
-  - clickup-standup: generate daily standup summary
+  - clickup-standup: generate daily standup summary for a person or team
   - clickup-sprint-closeout: close sprint, move incomplete items, generate retro data
   - clickup-time-audit: audit time tracking entries and utilization
   - clickup-project-setup: scaffold new project with spaces, lists, and templates
   - clickup-capacity-check: check team workload and availability
   - clickup-blocker-report: find blocked tasks and dependency chains
   - clickup-goal-progress: report on goal/OKR completion status
+- All recipes accept `$ARGUMENTS` for natural language scoping (team, department, person, etc.)
 - Each recipe: sequence of CLI commands with conditional logic hints
 - Target: 200-400 lines each
+- Users can create their own recipes as custom skills in `.claude/skills/`
 
 ### Step 41: Plugin Structure
 - Create `.claude-plugin/plugin.json` with name `clickup`, version, author, and metadata

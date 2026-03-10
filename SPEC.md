@@ -171,7 +171,11 @@ clickup-cli/
     clickup-fields/
       SKILL.md                  # Custom fields, tags, task types sub-skill
     clickup-weekly-review/
-      SKILL.md                  # Recipe: weekly team review
+      SKILL.md                  # Recipe: weekly progress report (any scope)
+    clickup-team-report/
+      SKILL.md                  # Recipe: department/team status rundown
+    clickup-custom-report/
+      SKILL.md                  # Recipe: any ad-hoc query or filtered report
     clickup-sprint-planning/
       SKILL.md                  # Recipe: sprint planning workflow
     clickup-task-triage/
@@ -647,7 +651,7 @@ The CLI ships with a hierarchical skills system that enables AI agents to use Cl
 |------|---------|------------|---------|
 | Root skill | Index and router. Tells the agent what the CLI does and how to learn more. | ~100-200 tokens | `skills/clickup/SKILL.md` |
 | Sub-skills | Per-resource command reference. Loaded on demand when the agent needs a specific resource. | ~200-500 tokens each | `skills/clickup-tasks/SKILL.md` |
-| Recipe skills | Multi-step workflow guides. Coordinate across multiple resources for common PM workflows. | ~300-600 tokens each | `skills/clickup-weekly-review/SKILL.md` |
+| Recipe skills | Multi-step workflow guides. Accept natural language arguments to scope to any team, department, or criteria. | ~300-600 tokens each | `skills/clickup-weekly-review/SKILL.md` |
 
 **How an agent uses the skills:**
 
