@@ -34,7 +34,7 @@ import { registerDocCommands } from './commands/doc.js'
 import { registerSkillCommands } from './commands/skill-cmd.js'
 import { registerChatCommands } from './commands/chat.js'
 
-const VERSION = '0.2.0'
+const VERSION = '0.2.1'
 
 export function createProgram(): Command {
   const program = new Command()

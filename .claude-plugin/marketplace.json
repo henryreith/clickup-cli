@@ -11,7 +11,7 @@
       "name": "clickup",
       "source": "./",
       "description": "ClickUp CLI with 23 agent skills covering the full API -- token-efficient alternative to MCP with chat, time tracking, docs, and project management workflows",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "homepage": "https://github.com/henryreith/clickup-cli",
       "keywords": ["clickup", "project-management", "tasks", "time-tracking"],
       "category": "productivity"
