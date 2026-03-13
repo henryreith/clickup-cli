@@ -58,6 +58,9 @@ clickup goal update-key-result kr_001 --steps-current 75 --note "On track"
 
 # List all active goals
 clickup goal list --workspace-id 9876543
+
+# Render goals as markdown table
+clickup goal list --workspace-id 9876543 --format md
 ```
 
 ## Discovery

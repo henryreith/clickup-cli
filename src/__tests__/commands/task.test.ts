@@ -254,7 +254,7 @@ describe('task commands', () => {
         '--format', 'json',
       ])
 
-      const body = (mockClient.post as ReturnType<typeof vi.fn>).mock.calls[0][1]
+      const body = (mockClient.post as ReturnType<typeof vi.fn>).mock.calls[0]![1]
       expect(body.markdown_description).toBe('## Heading')
       expect(body.description).toBeUndefined()
     })
@@ -271,7 +271,7 @@ describe('task commands', () => {
         '--format', 'json',
       ])
 
-      const body = (mockClient.post as ReturnType<typeof vi.fn>).mock.calls[0][1]
+      const body = (mockClient.post as ReturnType<typeof vi.fn>).mock.calls[0]![1]
       expect(body.custom_fields).toEqual([
         { id: 'cf1', value: 'hello' },
         { id: 'cf2', value: 42 },

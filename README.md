@@ -1,6 +1,6 @@
 # ClickUp CLI
 
-A comprehensive, open-source command-line interface for the ClickUp API v2.
+Zero-overhead CLI for the ClickUp API v2 -- for AI agents, scripts, and automation. Covers the entire API surface with all MCP capabilities and more.
 
 ## Why This Exists
 
@@ -15,7 +15,7 @@ Built for three audiences:
 
 ```bash
 # Install globally
-npm install -g clickup-cli
+npm install -g clickup-agent-cli
 
 # Authenticate with your personal API token
 clickup auth login --token pk_12345678_ABCDEFG
@@ -43,7 +43,7 @@ clickup task list --list-id 901234567 --format quiet | xargs -I{} clickup task g
 
 | Resource | Commands |
 |----------|----------|
-| Workspaces | list, get, seats, plan |
+| Workspaces | list, get, seats, plan, members |
 | Spaces | list, get, create, update, delete |
 | Folders | list, get, create, update, delete |
 | Lists | list, get, create, update, delete, add/remove tasks |
@@ -60,6 +60,8 @@ clickup task list --list-id 901234567 --format quiet | xargs -I{} clickup task g
 | Users | invite, get, update, remove |
 | User Groups | list, create, update, delete |
 | Guests | invite, manage, permissions |
+| Members | list, find, resolve |
+| Chat | channels, send |
 | Webhooks | list, create, update, delete |
 | Templates | list |
 | Custom Task Types | list |
@@ -74,10 +76,13 @@ Every command supports multiple output formats:
 - `--format tsv` - Tab-separated values
 - `--format quiet` - IDs only, one per line
 - `--format id` - Single ID (for create commands)
+- `--format md` - Markdown table (ideal for rendering in chat messages or documents)
 
 ## AI Agent Usage
 
-The CLI is built from the ground up for AI agents, following the "CLI as execution layer, skills as guidance layer" pattern. It ships as a Claude Code plugin with 20 agent skills, and works with any agent platform that can run bash commands.
+The CLI is built from the ground up for AI agents, following the "CLI as execution layer, skills as guidance layer" pattern. It ships as a Claude Code plugin with 23 agent skills, and works with any agent platform that can run bash commands.
+
+**vs ClickUp MCP:** This CLI covers the same operations as the official ClickUp MCP server (tasks, docs, time tracking, chat, members, hierarchy) plus more, while consuming far fewer tokens. A full skills hierarchy loads in ~150 tokens at session start vs injecting an entire API schema. Works in any agent platform that supports bash -- not just MCP-compatible hosts.
 
 ### Claude Code Plugin (Recommended)
 
@@ -95,7 +100,7 @@ Install the ClickUp CLI as a Claude Code plugin for zero-friction access to all 
 /clickup:sprint-planning list-id-here
 ```
 
-Once installed, Claude Code auto-discovers all 20 skills and loads them on demand. Recipe skills like `/clickup:weekly-review` run in isolated subagents with full ClickUp CLI access.
+Once installed, Claude Code auto-discovers all 23 skills and loads them on demand. Recipe skills like `/clickup:weekly-review` run in isolated subagents with full ClickUp CLI access.
 
 ### Claude Agent SDK
 
@@ -136,7 +141,7 @@ clickup skill show clickup-weekly-review
 
 **Three skill tiers:**
 - **Root skill** - Index and router. What the CLI does, how to discover more.
-- **Sub-skills** (9) - Per-resource command reference. Tasks, spaces, comments, time tracking, etc.
+- **Sub-skills** (10) - Per-resource command reference. Tasks, spaces, comments, time tracking, chat, etc.
 - **Recipe skills** (12) - Multi-step workflow guides that accept natural language arguments. Scope any recipe to a specific team, department, or person.
 
 **Example recipe invocations:**
@@ -176,8 +181,8 @@ This creates `/marketing-weekly` alongside the built-in `/clickup:*` skills.
 |----------|-----------|
 | Claude Code | Plugin via marketplace (see above) |
 | Claude Agent SDK | `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]` |
-| Gemini CLI | `npm install -g clickup-cli`, read skills via `clickup skill show` |
-| OpenAI Codex | `npm install -g clickup-cli`, execute commands via bash |
+| Gemini CLI | `npm install -g clickup-agent-cli`, read skills via `clickup skill show` |
+| OpenAI Codex | `npm install -g clickup-agent-cli`, execute commands via bash |
 | Custom agents | `clickup skill list` for discovery, `clickup schema` for field info |
 
 ### Agent-Friendly Design

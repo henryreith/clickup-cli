@@ -32,8 +32,9 @@ import { registerSchemaCommands } from './commands/schema-cmd.js'
 import { registerSharedHierarchyCommands } from './commands/shared-hierarchy.js'
 import { registerDocCommands } from './commands/doc.js'
 import { registerSkillCommands } from './commands/skill-cmd.js'
+import { registerChatCommands } from './commands/chat.js'
 
-const VERSION = '0.1.0'
+const VERSION = '0.2.0'
 
 export function createProgram(): Command {
   const program = new Command()
@@ -44,7 +45,7 @@ export function createProgram(): Command {
     .version(VERSION)
     .option('--token <token>', 'API token')
     .option('--workspace-id <id>', 'Workspace ID')
-    .option('--format <format>', 'Output format (table|json|csv|tsv|quiet|id)')
+    .option('--format <format>', 'Output format (table|json|csv|tsv|quiet|id|md)')
     .option('--no-color', 'Disable colors')
     .option('--no-header', 'Omit column headers')
     .option('--fields <fields>', 'Show only specified fields (comma-separated)')
@@ -123,6 +124,7 @@ export function run(): void {
   registerTaskTypeCommands(program, () => createClient(program))
   registerSharedHierarchyCommands(program, () => createClient(program))
   registerDocCommands(program, () => createClient(program))
+  registerChatCommands(program, () => createClient(program))
   registerSchemaCommands(program)
   registerSkillCommands(program)
 

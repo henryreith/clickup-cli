@@ -1,7 +1,7 @@
 ---
 name: clickup-users
-description: Manages ClickUp workspace users, groups, guests, roles, and members. Use when the user asks about team members, wants to invite users, manage groups, grant guest access, check permissions, or see who is assigned to what.
-allowed-tools: Bash(clickup user *), Bash(clickup group *), Bash(clickup guest *), Bash(clickup role *), Bash(clickup member *), Bash(clickup schema user*), Bash(clickup schema group*), Bash(clickup schema guest*)
+description: Manages ClickUp workspace users, groups, guests, roles, and members. Use when the user asks about team members, wants to invite users, manage groups, grant guest access, check permissions, resolve names to IDs, or see who is assigned to what.
+allowed-tools: Bash(clickup user *), Bash(clickup group *), Bash(clickup guest *), Bash(clickup role *), Bash(clickup member *), Bash(clickup workspace members), Bash(clickup schema user*), Bash(clickup schema group*), Bash(clickup schema guest*), Bash(clickup schema member*)
 ---
 
 # ClickUp Users and Access
@@ -46,6 +46,22 @@ clickup guest add-to-folder <guest-id> --folder-id <id> --permission <read|comme
 clickup guest remove-from-folder <guest-id> --folder-id <id>
 ```
 
+## Workspace Member Commands
+
+```bash
+# List all members in workspace (full directory)
+clickup workspace members --workspace-id <id>
+
+# Find a member by name (fuzzy match on username or email)
+clickup member find --name "Alice" --workspace-id <id>
+
+# Resolve names to user IDs (pipe-friendly)
+clickup member resolve --names "Alice, Bob" --workspace-id <id>
+
+# Get IDs only for use in other commands
+clickup member resolve --names "Alice, Bob" --format quiet
+```
+
 ## Role and Member Commands
 
 ```bash
@@ -66,6 +82,34 @@ clickup group create --workspace-id 9876543 --name "Frontend Team" --member-id 1
 # Give a client read access to a folder
 clickup guest invite --workspace-id 9876543 --email client@external.com
 clickup guest add-to-folder guest_001 --folder-id 998877 --permission read
+
+# Find a user ID from a name (common agent pattern)
+clickup member find --name "Sarah" --format json | jq '.[0].id'
+
+# Resolve multiple names to IDs for bulk assignment
+IDS=$(clickup member resolve --names "Alice, Bob, Carol" --format quiet | tr '\n' ',')
+clickup task update TASK_ID --assignee-add $IDS
+
+# Display workspace directory as markdown table
+clickup workspace members --format md
+```
+
+## Resolving Names to IDs
+
+Agents often receive person names but ClickUp APIs require user IDs. Use these commands to bridge the gap:
+
+```bash
+# 1. Find one person
+clickup member find --name "Alice Johnson" --format json
+
+# 2. Resolve multiple names at once (outputs table with id/username/email)
+clickup member resolve --names "Alice, Bob, Sarah"
+
+# 3. IDs-only output for piping into task assignee flags
+clickup member resolve --names "Alice, Bob" --format quiet
+# outputs:
+# 1234567
+# 8901234
 ```
 
 ## Discovery
@@ -73,4 +117,6 @@ clickup guest add-to-folder guest_001 --folder-id 998877 --permission read
 ```bash
 clickup schema users.invite    # Show invite fields
 clickup schema guests.invite   # Show guest invite fields
+clickup schema member.find     # Show find flags
+clickup schema member.resolve  # Show resolve flags
 ```

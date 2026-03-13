@@ -68,6 +68,9 @@ clickup time running --workspace-id 9876543
 
 # Get all time entries for this week
 clickup time list --workspace-id 9876543 --start 2025-01-06 --end 2025-01-12
+
+# Render time entries as markdown table for reports
+clickup time list --workspace-id 9876543 --format md
 ```
 
 ## Notes

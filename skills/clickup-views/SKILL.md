@@ -53,6 +53,9 @@ clickup view tasks view_abc --format json
 
 # List views at the workspace level
 clickup view list --workspace-id 9876543
+
+# Render view tasks as markdown table
+clickup view tasks view_abc --format md
 ```
 
 ## Discovery

@@ -108,6 +108,12 @@ clickup comment create --task-id "$TASK_ID" --text "Starting investigation"
 
 # Bulk get tasks by ID
 clickup task list --list-id <id> --format quiet | xargs -I{} clickup task get {}
+
+# Render task list as markdown table (for display in chat or docs)
+clickup task list --list-id <id> --format md
+
+# Send task list to a chat channel
+clickup chat send --channel-id <id> --message "$(clickup task list --list-id <id> --format md)"
 ```
 
 ## Discovery

@@ -46,6 +46,9 @@ export function formatOutput(data: unknown[] | unknown, columns: ColumnDef[], op
     case 'id':
       printId(processed)
       break
+    case 'md':
+      printMarkdown(processed, activeCols, opts)
+      break
     default:
       printJson(processed)
   }
@@ -164,5 +167,19 @@ function printId(rows: unknown[]): void {
   if (rows.length > 0) {
     const id = getValue(rows[0]!, 'id')
     if (id) process.stdout.write(id + '\n')
+  }
+}
+
+function printMarkdown(rows: unknown[], columns: ColumnDef[], opts: OutputOptions): void {
+  if (columns.length === 0) {
+    printJson(rows)
+    return
+  }
+  if (!opts.noHeader) {
+    process.stdout.write('| ' + columns.map((c) => c.header).join(' | ') + ' |\n')
+    process.stdout.write('| ' + columns.map((c) => '-'.repeat(Math.max(c.header.length, 3))).join(' | ') + ' |\n')
+  }
+  for (const row of rows) {
+    process.stdout.write('| ' + columns.map((col) => getValue(row, col.key).replace(/\|/g, '\\|')).join(' | ') + ' |\n')
   }
 }

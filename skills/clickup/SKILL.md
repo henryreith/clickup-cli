@@ -37,7 +37,8 @@ clickup <resource> <action> --help     # Full help text
 | `clickup-time` | Time entries, running timers, time tags, reports |
 | `clickup-goals` | Goals, key results, OKR tracking |
 | `clickup-views` | Views (board, list, Gantt, etc.), view tasks |
-| `clickup-users` | Users, groups, guests, roles, members |
+| `clickup-users` | Users, groups, guests, roles, members, workspace member search |
+| `clickup-chat` | Chat channels, sending messages and notifications |
 | `clickup-webhooks` | Webhook registration and management |
 | `clickup-fields` | Custom fields, tags, custom task types |
 
@@ -78,11 +79,27 @@ clickup task list --list-id <id> --format quiet | xargs -I{} clickup task get {}
 
 ## Global Flags
 
-All commands support: `--format json|table|csv|quiet|id`, `--dry-run`, `--debug`, `--no-color`
+All commands support: `--format json|table|csv|tsv|quiet|id|md`, `--dry-run`, `--debug`, `--no-color`
+
+Use `--format md` to render output as a markdown table -- ideal for displaying results in chat messages or documents.
 
 ## Auth
 
-Requires a ClickUp API token. Check status with `clickup auth status`.
+Requires a ClickUp API token.
+
+```bash
+# Set up authentication
+clickup auth login --token pk_XXXXXXXX_YYYYYYYY
+
+# Or use an environment variable
+export CLICKUP_TOKEN=pk_XXXXXXXX_YYYYYYYY
+
+# Store default workspace
+clickup config set workspace_id <id>
+
+# Check current auth status
+clickup auth status
+```
 
 ## Creating Custom Skills
 

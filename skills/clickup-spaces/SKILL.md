@@ -67,6 +67,9 @@ clickup folder list --space-id <id> | grep "Sprint"
 
 # Set default workspace to avoid repeating --workspace-id
 clickup config set workspace_id <id>
+
+# Render folder list as markdown table for display in docs or chat
+clickup folder list --space-id <id> --format md
 ```
 
 ## Key Concepts

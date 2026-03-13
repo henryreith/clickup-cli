@@ -1,7 +1,7 @@
 {
   "name": "clickup",
-  "description": "Comprehensive ClickUp CLI with 20 agent skills for tasks, time tracking, goals, sprints, and project management workflows",
-  "version": "0.1.0",
+  "description": "ClickUp CLI with 23 agent skills covering the full API -- token-efficient alternative to MCP with chat, time tracking, docs, and project management workflows",
+  "version": "0.2.0",
   "author": {
     "name": "Henry Reith"
   },

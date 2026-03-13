@@ -54,6 +54,9 @@ clickup comment update cmt_123 --resolved true
 
 # Reply in a thread
 clickup comment reply cmt_123 --text "Done - merged to main"
+
+# List comments as markdown table
+clickup comment list --task-id <id> --format md
 ```
 
 ## Discovery

@@ -64,6 +64,9 @@ clickup tag add --task-id abc9zt --name "urgent"
 
 # List all fields available in a list (to find field IDs)
 clickup field list --list-id 998877 --format json
+
+# Render field list as markdown table
+clickup field list --list-id 998877 --format md
 ```
 
 ## Discovery

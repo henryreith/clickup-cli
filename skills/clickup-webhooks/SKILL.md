@@ -48,6 +48,9 @@ clickup webhook update wh_001 --status inactive
 
 # Re-enable it
 clickup webhook update wh_001 --status active
+
+# List webhooks as markdown table
+clickup webhook list --workspace-id 9876543 --format md
 ```
 
 ## Discovery

@@ -20,6 +20,17 @@ registerSchema('workspace', 'plan', 'Show current billing plan for a workspace',
   { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
 ])
 
+registerSchema('workspace', 'members', 'List all members in a workspace', [
+  { flag: '--workspace-id', type: 'string', required: false, description: 'Workspace ID' },
+])
+
+const WORKSPACE_MEMBER_COLUMNS: ColumnDef[] = [
+  { key: 'id', header: 'ID', width: 12 },
+  { key: 'username', header: 'Username', width: 22 },
+  { key: 'email', header: 'Email', width: 32 },
+  { key: 'role', header: 'Role', width: 10 },
+]
+
 const WORKSPACE_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 14 },
   { key: 'name', header: 'Name', width: 30 },
@@ -119,5 +130,24 @@ export function registerWorkspaceCommands(
         { key: 'plan_id', header: 'Plan ID', width: 12 },
         { key: 'plan_name', header: 'Plan', width: 30 },
       ], getOutputOptions(program))
+    })
+
+  workspace
+    .command('members')
+    .description('List all members in workspace')
+    .action(async () => {
+      const workspaceId = requireWorkspaceId(program)
+      if (!workspaceId) return
+      const client = getClient()
+      const data = await client.get<{ members: Array<{ user: Record<string, unknown>; role: number }> }>(
+        `/team/${workspaceId}/member`,
+      )
+      const rows = (data.members ?? []).map((m) => ({
+        id: m.user['id'],
+        username: m.user['username'],
+        email: m.user['email'],
+        role: m.role,
+      }))
+      formatOutput(rows, WORKSPACE_MEMBER_COLUMNS, getOutputOptions(program))
     })
 }
