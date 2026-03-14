@@ -1,7 +1,7 @@
 ---
 name: clickup-fields
 description: Manages ClickUp custom fields, tags, and custom task types. Use when the user asks about custom fields, wants to set field values on tasks, manage tags, or work with custom task types.
-allowed-tools: Bash(clickup custom-field *), Bash(clickup tag *), Bash(clickup custom-task-type *), Bash(clickup schema field*), Bash(clickup schema tag*)
+allowed-tools: Bash(clickup custom-field *), Bash(clickup tag *), Bash(clickup custom-task-type *), Bash(clickup attachment *), Bash(clickup schema field*), Bash(clickup schema tag*)
 ---
 
 # ClickUp Custom Fields, Tags, and Task Types
@@ -69,9 +69,20 @@ clickup field list --list-id 998877 --format json
 clickup field list --list-id 998877 --format md
 ```
 
+## Attachment Commands
+
+```bash
+clickup attachment upload --task-id <id> --file <path> [--filename <name>]
+clickup attachment list --task-id <id>
+clickup attachment download --task-id <id> --attachment-id <id> [--output <path>]
+```
+
+`attachment download` fetches the file with the auth header and writes to `--output` (default: `./attachment-<id>-<title>`). Shows a spinner during download.
+
 ## Discovery
 
 ```bash
 clickup schema fields.set      # Show field set options
 clickup schema tags.create     # Show tag create fields
+clickup schema attachment.list # Show attachment list options
 ```

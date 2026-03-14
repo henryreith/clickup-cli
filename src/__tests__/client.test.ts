@@ -139,11 +139,11 @@ describe('ClickUpClient', () => {
     vi.stubGlobal('fetch', fetchSpy)
 
     vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+    const { DryRunComplete } = await import('../errors.js')
     const client = new ClickUpClient({ token: 'pk_test', dryRun: true })
-    const result = await client.post('/task', { name: 'test' })
 
+    await expect(client.post('/task', { name: 'test' })).rejects.toBeInstanceOf(DryRunComplete)
     expect(fetchSpy).not.toHaveBeenCalled()
-    expect(result).toEqual({})
   })
 
   it('verbose mode logs to stderr', async () => {

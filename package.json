@@ -1,6 +1,6 @@
 {
   "name": "clickup-agent-cli",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "CLI covering the entire ClickUp API v2 surface",
   "type": "module",
   "bin": {
@@ -18,7 +18,8 @@
     "build": "tsup",
     "dev": "tsx bin/clickup.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "version": "node scripts/sync-version.js"
   },
   "keywords": [
     "clickup",

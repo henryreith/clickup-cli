@@ -6,7 +6,8 @@ import { registerConfigCommands } from '../../commands/config-cmd.js'
 function createTestProgram() {
   const program = new Command()
   program.name('clickup')
-  registerConfigCommands(program)
+  const mockClient = {} as import('../../client.js').ClickUpClient
+  registerConfigCommands(program, () => mockClient)
   return program
 }
 

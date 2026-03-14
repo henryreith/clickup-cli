@@ -11,11 +11,14 @@ Manage the organizational hierarchy: Workspace > Space > Folder > List. Lists co
 ## Workspace Commands
 
 ```bash
+clickup workspace setup                         # Auto-configure workspace (run after auth login)
 clickup workspace list                          # List all workspaces
 clickup workspace get [--workspace-id <id>]     # Get workspace details
 clickup workspace seats [--workspace-id <id>]   # Show seat usage
 clickup workspace plan [--workspace-id <id>]    # Show billing plan
 ```
+
+`workspace setup` calls `GET /team`, auto-selects if only one workspace exists, prompts in TTY if multiple, and saves the workspace to the active profile. After running it, `--workspace-id` is not needed for subsequent commands.
 
 ## Space Commands
 

@@ -1,7 +1,7 @@
 import { Command } from 'commander'
 import { ClickUpClient, type ClickUpClientOptions } from './client.js'
-import { ClickUpError, mapToExitCode, EXIT_CODES } from './errors.js'
-import { resolveToken, resolveOutputFormat } from './config.js'
+import { ClickUpError, DryRunComplete, mapToExitCode, EXIT_CODES } from './errors.js'
+import { resolveToken, resolveOutputFormat, setProfileOverride } from './config.js'
 import type { OutputOptions } from './output.js'
 import { registerAuthCommands } from './commands/auth-cmd.js'
 import { registerConfigCommands } from './commands/config-cmd.js'
@@ -34,7 +34,7 @@ import { registerDocCommands } from './commands/doc.js'
 import { registerSkillCommands } from './commands/skill-cmd.js'
 import { registerChatCommands } from './commands/chat.js'
 
-const VERSION = '0.2.1'
+const VERSION = '0.3.0'
 
 export function createProgram(): Command {
   const program = new Command()
@@ -44,6 +44,8 @@ export function createProgram(): Command {
     .description('ClickUp CLI - Manage ClickUp workspaces from the terminal')
     .version(VERSION)
     .option('--token <token>', 'API token')
+    .option('--token-file <path>', 'Read API token from this file path')
+    .option('--profile <name>', 'Profile to use (key, workspace name, or nickname)')
     .option('--workspace-id <id>', 'Workspace ID')
     .option('--format <format>', 'Output format (table|json|csv|tsv|quiet|id|md)')
     .option('--no-color', 'Disable colors')
@@ -61,7 +63,10 @@ export function createProgram(): Command {
 
 function createClient(program: Command): ClickUpClient {
   const globalOpts = program.opts()
-  const token = resolveToken(globalOpts['token'] as string | undefined)
+  const token = resolveToken(
+    globalOpts['token'] as string | undefined,
+    globalOpts['tokenFile'] as string | undefined,
+  )
 
   if (!token) {
     process.stderr.write('Error: No API token found. Run: clickup auth login\n')
@@ -97,8 +102,13 @@ export function getOutputOptions(program: Command): OutputOptions {
 export function run(): void {
   const program = createProgram()
 
+  // Apply --profile override before any action runs
+  program.hook('preAction', () => {
+    setProfileOverride(program.opts()['profile'] as string | undefined)
+  })
+
   registerAuthCommands(program, () => createClient(program))
-  registerConfigCommands(program)
+  registerConfigCommands(program, () => createClient(program))
   registerWorkspaceCommands(program, () => createClient(program))
   registerSpaceCommands(program, () => createClient(program))
   registerFolderCommands(program, () => createClient(program))
@@ -129,6 +139,10 @@ export function run(): void {
   registerSkillCommands(program)
 
   program.parseAsync(process.argv).catch((error: unknown) => {
+    if (error instanceof DryRunComplete) {
+      process.exit(EXIT_CODES.SUCCESS)
+    }
+
     if (error instanceof ClickUpError) {
       process.stderr.write(`Error: ${error.message}\n`)
       process.exit(mapToExitCode(error))

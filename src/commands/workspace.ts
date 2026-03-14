@@ -1,10 +1,12 @@
 import { Command } from 'commander'
 import type { ClickUpClient } from '../client.js'
-import { resolveWorkspaceId } from '../config.js'
+import { resolveWorkspaceId, getProfiles, setProfile, getActiveProfileKey, slugifyWorkspaceName } from '../config.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { WorkspaceListResponse, Seats, Plan } from '../types/workspace.js'
 import { registerSchema } from '../schema.js'
+
+registerSchema('workspace', 'setup', 'Configure workspace -- fetches workspaces and saves profile', [])
 
 registerSchema('workspace', 'list', 'List all workspaces accessible to the authenticated user', [])
 
@@ -61,6 +63,57 @@ export function registerWorkspaceCommands(
   getClient: () => ClickUpClient,
 ): void {
   const workspace = program.command('workspace').description('Manage workspaces')
+
+  workspace
+    .command('setup')
+    .description('Configure workspace for the active profile')
+    .action(async () => {
+      const client = getClient()
+      const data = await client.get<WorkspaceListResponse>('/team')
+      const teams = data.teams
+
+      if (teams.length === 0) {
+        process.stderr.write('Error: No workspaces found for this token.\n')
+        process.exit(1)
+        return
+      }
+
+      let selected: { id: string; name: string }
+
+      if (teams.length === 1) {
+        selected = teams[0]!
+      } else {
+        if (!process.stdin.isTTY) {
+          process.stderr.write('Error: Multiple workspaces found. Use --workspace-id or run in interactive mode.\n')
+          process.exit(2)
+          return
+        }
+        const { select } = await import('@inquirer/prompts')
+        const selectedId = await select({
+          message: 'Select workspace:',
+          choices: teams.map((t) => ({ name: t.name, value: t.id })),
+        })
+        selected = teams.find((t) => t.id === selectedId)!
+      }
+
+      const profileKey = getActiveProfileKey()
+      const profiles = getProfiles()
+      const existing = profiles[profileKey] ?? {}
+      const slugKey = slugifyWorkspaceName(selected.name)
+
+      setProfile(profileKey, {
+        ...existing,
+        workspace_id: selected.id,
+        workspace_name: selected.name,
+      })
+
+      process.stdout.write(
+        `Workspace "${selected.name}" saved as profile "${profileKey}".\n`,
+      )
+      if (slugKey !== profileKey) {
+        process.stdout.write(`Use --profile "${selected.name}" or --profile ${profileKey}\n`)
+      }
+    })
 
   workspace
     .command('list')

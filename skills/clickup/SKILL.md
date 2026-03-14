@@ -41,6 +41,7 @@ clickup <resource> <action> --help     # Full help text
 | `clickup-chat` | Chat channels, sending messages and notifications |
 | `clickup-webhooks` | Webhook registration and management |
 | `clickup-fields` | Custom fields, tags, custom task types |
+| `clickup-templates` | Templates: list available templates, apply task/list/folder templates |
 
 ## Recipe Skills (multi-step workflows)
 
@@ -57,6 +58,7 @@ Recipes accept natural language arguments. Scope them to any team, department, p
 | `clickup-sprint-closeout` | Close a sprint, carry over incomplete work |
 | `clickup-time-audit` | Audit time tracking and utilization |
 | `clickup-project-setup` | Scaffold a new project structure |
+| `clickup-rollout` | Roll out a saved process template (apply + configure) |
 | `clickup-capacity-check` | Check team workload and availability |
 | `clickup-blocker-report` | Find blocked tasks and dependency chains |
 | `clickup-goal-progress` | Report on goal/OKR completion |
@@ -81,6 +83,10 @@ clickup task list --list-id <id> --format quiet | xargs -I{} clickup task get {}
 
 All commands support: `--format json|table|csv|tsv|quiet|id|md`, `--dry-run`, `--debug`, `--no-color`
 
+Additional global flags:
+- `--profile <name>` -- select a named profile (accepts profile key, workspace name, or nickname)
+- `--token-file <path>` -- read API token from a file (useful in CI/CD and secret managers)
+
 Use `--format md` to render output as a markdown table -- ideal for displaying results in chat messages or documents.
 
 ## Auth
@@ -91,15 +97,44 @@ Requires a ClickUp API token.
 # Set up authentication
 clickup auth login --token pk_XXXXXXXX_YYYYYYYY
 
-# Or use an environment variable
-export CLICKUP_TOKEN=pk_XXXXXXXX_YYYYYYYY
+# Read token from file (CI/CD-friendly)
+clickup auth login --token-file /run/secrets/clickup_token
 
-# Store default workspace
-clickup config set workspace_id <id>
+# Or use an environment variable
+export CLICKUP_API_TOKEN=pk_XXXXXXXX_YYYYYYYY
+
+# Auto-configure workspace after login (single workspace: auto-selects)
+clickup workspace setup
 
 # Check current auth status
 clickup auth status
+
+# Validate token and show identity
+clickup config validate
 ```
+
+## Named Profiles (Multi-Account)
+
+Profiles store credentials per workspace. A single-workspace setup is transparent -- no `--profile` flag needed.
+
+```bash
+# List profiles
+clickup config profile list
+
+# Switch active profile
+clickup config profile use "Acme Corp"
+
+# Set a short nickname
+clickup config profile nickname acme-corp acme
+
+# Use a specific profile for one command
+clickup task list --list-id 123 --profile acme
+```
+
+Profile resolution for `--profile` accepts:
+1. The profile key (e.g. `default`)
+2. Workspace name, case-insensitive (e.g. `"Henry's Workspace"`)
+3. Nickname if set (e.g. `acme`)
 
 ## Creating Custom Skills
 

@@ -79,3 +79,10 @@ export const EXIT_CODES = {
   RATE_LIMITED: 6,
   NETWORK_ERROR: 7,
 } as const
+
+export class DryRunComplete extends Error {
+  constructor() {
+    super('Dry run complete')
+    this.name = 'DryRunComplete'
+  }
+}

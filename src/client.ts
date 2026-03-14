@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
-import { ClickUpError, parseApiError } from './errors.js'
+import { ClickUpError, DryRunComplete, parseApiError } from './errors.js'
 
 export interface ClickUpClientOptions {
   token: string
@@ -62,6 +62,35 @@ export class ClickUpClient {
     return this.request<T>('DELETE', path, body)
   }
 
+  async downloadUrl(url: string): Promise<ArrayBuffer> {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: this.token },
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        const body = await this.safeJson(response)
+        throw parseApiError(body, response.status)
+      }
+
+      return response.arrayBuffer()
+    } catch (error) {
+      clearTimeout(timeoutId)
+      if (error instanceof ClickUpError) throw error
+      throw new ClickUpError(
+        `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        0,
+        undefined,
+        undefined,
+      )
+    }
+  }
+
   async upload<T>(path: string, filePath: string, filename?: string): Promise<T> {
     const fileBuffer = readFileSync(filePath)
     const resolvedFilename = filename ?? basename(filePath)
@@ -72,7 +101,7 @@ export class ClickUpClient {
 
     if (this.dryRun) {
       this.logDryRun('POST', url, '[multipart form data]')
-      return {} as T
+      throw new DryRunComplete()
     }
 
     const controller = new AbortController()
@@ -130,7 +159,7 @@ export class ClickUpClient {
 
     if (this.dryRun) {
       this.logDryRun(method, url, body)
-      return {} as T
+      throw new DryRunComplete()
     }
 
     let lastError: ClickUpError | undefined

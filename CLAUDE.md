@@ -99,7 +99,9 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 
 ### Config Resolution
 - Always use resolveToken(), resolveWorkspaceId(), etc. from src/config.ts
-- Precedence: command flag > environment variable > stored config
+- Token precedence: --token flag > --token-file > CLICKUP_API_TOKEN env > active profile > legacy flat key
+- Workspace precedence: --workspace-id flag > CLICKUP_WORKSPACE_ID env > active profile > single-workspace auto-select > legacy flat key
+- Profile resolved from --profile global flag via setProfileOverride() called in program.hook('preAction')
 - Never read process.env directly in command files
 
 ### Output
@@ -139,6 +141,17 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 - Sub-skills: add `allowed-tools` scoped to relevant `clickup` subcommands
 - Recipe skills: set `disable-model-invocation: true`, `context: fork`, `agent: general-purpose`, `allowed-tools: Bash(clickup *)`
 - Recipe skills should accept `$ARGUMENTS` for parameterized invocation
+
+### Keeping Skills and Plugin Files in Sync
+Whenever a new command is added, an existing command changes behavior, or any user-facing functionality is modified:
+- Update the relevant skill file(s) in `skills/` (sub-skill and/or recipe as appropriate)
+- Update `skills/clickup/SKILL.md` root index table if a new skill was added or removed
+- Update `COMMANDS.md` with the full command reference
+- Update `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` version and skill count
+Skills and plugin manifest updates are part of the definition of done, not optional cleanup.
+
+### CLAUDE.md as Living Document
+This file is the authoritative project guide. Read it at the start of every session. Update it whenever new patterns, conventions, or standing rules are established. Any agent working on this project should treat CLAUDE.md as the first thing to read and the last thing to update.
 
 ### Plugin Distribution
 - The repo root is a Claude Code plugin (`.claude-plugin/plugin.json` + `skills/`)

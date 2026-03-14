@@ -33,7 +33,7 @@ clickup task get <task-id> [--include-subtasks] [--include-markdown-description]
 ```bash
 clickup task create --list-id <id> --name <name>
     [--description <text>] [--markdown-description <md>]
-    [--status <s>] [--priority <1-4>] [--due-date <ts>] [--start-date <ts>]
+    [--status <s>] [--priority <1-4|urgent|high|normal|low>] [--due-date <ts>] [--start-date <ts>]
     [--assignee <id>...] [--tag <name>...] [--time-estimate <ms>]
     [--parent <task-id>] [--custom-field <id=value>...]
 ```
@@ -41,14 +41,27 @@ clickup task create --list-id <id> --name <name>
 ### Update a task
 ```bash
 clickup task update <task-id> [--name <name>] [--description <text>]
-    [--status <s>] [--priority <1-4>] [--due-date <ts>] [--start-date <ts>]
+    [--status <s>] [--priority <1-4|urgent|high|normal|low>] [--due-date <ts>] [--start-date <ts>]
     [--assignee-add <id>...] [--assignee-remove <id>...] [--archived <bool>]
 ```
+
+Priority accepts both integers (`1`-`4`) and strings (`urgent`, `high`, `normal`, `low`). Mapping: urgent=1, high=2, normal=3, low=4.
 
 ### Delete a task
 ```bash
 clickup task delete <task-id> --confirm
 ```
+
+### Bulk operations (concurrency limit 3)
+```bash
+# Apply the same update to multiple tasks
+clickup task bulk-update --task-id <id> --task-id <id> ... [same update flags as task update]
+
+# Delete multiple tasks
+clickup task bulk-delete --task-id <id> --task-id <id> ... --confirm
+```
+
+Both bulk commands output a results table with `task_id | name | result`.
 
 ### Time in status
 ```bash

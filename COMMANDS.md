@@ -44,7 +44,7 @@ Manage authentication credentials and CLI configuration. The CLI supports both p
 ### Authentication
 
 ```
-clickup auth login [--token <t>] [--oauth]
+clickup auth login [--token <t>] [--token-file <path>] [--oauth]
 clickup auth logout
 clickup auth status
 clickup auth token
@@ -53,6 +53,7 @@ clickup auth token
 | Flag | Description |
 |------|-------------|
 | `--token <t>` | Authenticate with a personal API token directly |
+| `--token-file <path>` | Read token from a file (useful in CI/CD) |
 | `--oauth` | Launch OAuth browser flow for workspace-level auth |
 
 **Examples**
@@ -60,6 +61,9 @@ clickup auth token
 ```bash
 # Authenticate with a personal token
 clickup auth login --token pk_abc123...
+
+# Read token from a secrets file
+clickup auth login --token-file /run/secrets/clickup_token
 
 # Launch OAuth browser flow
 clickup auth login --oauth
@@ -74,35 +78,70 @@ clickup auth status
 clickup config set <key> <value>
 clickup config get <key>
 clickup config list
-clickup config reset
+clickup config reset [--confirm]
 clickup config path
+clickup config validate
+
+clickup config profile list
+clickup config profile create <key>
+clickup config profile delete <key> [--confirm]
+clickup config profile use <key|name|nickname>
+clickup config profile nickname <key> <nickname>
 ```
 
 | Command | Description |
 |---------|-------------|
-| `config set <key> <value>` | Set a config value (e.g. `workspace-id`, `default-list-id`) |
+| `config set <key> <value>` | Set a global config value |
 | `config get <key>` | Print the current value of a key |
 | `config list` | Print all config key/value pairs |
 | `config reset` | Reset config to defaults |
 | `config path` | Print the path to the config file on disk |
+| `config validate` | Verify stored token works and show current identity |
+| `config profile list` | List all named profiles |
+| `config profile create <key>` | Create an empty profile |
+| `config profile delete <key>` | Delete a profile |
+| `config profile use <key>` | Switch the active profile |
+| `config profile nickname <key> <nick>` | Set a short nickname for a profile |
 
 **Examples**
 
 ```bash
-# Set a default workspace so you don't need --workspace-id on every command
-clickup config set workspace-id 9876543
+# Validate your token and see current identity
+clickup config validate
+
+# List all configured profiles
+clickup config profile list
+
+# Switch to a different workspace profile
+clickup config profile use "Acme Corp"
+
+# Set a short nickname so you can use --profile acme
+clickup config profile nickname acme-corp acme
 
 # Check where the config file lives
 clickup config path
 ```
 
+### Global Flags (all commands)
+
+| Flag | Description |
+|------|-------------|
+| `--profile <name>` | Profile to use (key, workspace name, or nickname) |
+| `--token-file <path>` | Read API token from this file path |
+| `--token <t>` | Override token for this invocation |
+| `--workspace-id <id>` | Override workspace ID for this invocation |
+| `--format <fmt>` | Output format: table, json, csv, tsv, quiet, id, md |
+| `--dry-run` | Print what would be sent without executing |
+| `--debug` | Full debug output |
+
 ---
 
 ## Workspaces
 
-A workspace (also called a team) is the top-level container for all ClickUp data. Most commands accept `--workspace-id` to target a specific workspace; if you set a default via `clickup config set workspace-id <id>`, you can omit it.
+A workspace (also called a team) is the top-level container for all ClickUp data. Run `clickup workspace setup` after `auth login` to auto-configure your workspace. If only one workspace exists it is auto-selected silently.
 
 ```
+clickup workspace setup
 clickup workspace list
 clickup workspace get [--workspace-id <id>]
 clickup workspace seats [--workspace-id <id>]
@@ -488,23 +527,33 @@ clickup task update <task-id>
 
 ---
 
-### task delete / time-in-status
+### task delete / time-in-status / bulk operations
 
 ```
 clickup task delete <task-id> [--confirm]
 clickup task time-in-status <task-id>
 clickup task bulk-time-in-status --task-id <id>...
+clickup task bulk-update --task-id <id>... [update flags]
+clickup task bulk-delete --task-id <id>... --confirm
 ```
 
-**Destructive:** `task delete` requires `--confirm`.
+**Destructive:** `task delete` and `task bulk-delete` require `--confirm`.
 
-`time-in-status` returns how long a task has spent in each status, including the current one. `bulk-time-in-status` accepts multiple task IDs.
+`time-in-status` returns how long a task has spent in each status. `bulk-update` applies the same update to all specified tasks (concurrency limit 3). Both bulk commands output a results table.
+
+Priority accepts integers (`1`-`4`) or strings (`urgent`, `high`, `normal`, `low`) in `task create`, `task update`, and `task bulk-update`.
 
 **Examples**
 
 ```bash
 # Delete a task
 clickup task delete abc9zt --confirm
+
+# Bulk-update priority on several tasks
+clickup task bulk-update --task-id abc9zt --task-id def3qr --priority urgent
+
+# Bulk-delete
+clickup task bulk-delete --task-id abc9zt --task-id def3qr --confirm
 
 # Get time-in-status breakdown for multiple tasks
 clickup task bulk-time-in-status --task-id abc9zt --task-id def3qr
@@ -719,17 +768,27 @@ clickup relation add --task-id abc9zt --links-to ghi7uv
 
 ## Attachments
 
-Upload files directly to a task. Returns an attachment record with a download URL.
+Upload, list, and download task attachments.
 
 ```
 clickup attachment upload --task-id <id> --file <path> [--filename <name>]
+clickup attachment list --task-id <id>
+clickup attachment download --task-id <id> --attachment-id <id> [--output <path>]
 ```
+
+| Command | Description |
+|---------|-------------|
+| `attachment upload` | Upload a file to a task |
+| `attachment list` | List all attachments on a task |
+| `attachment download` | Download an attachment by ID |
 
 | Flag | Description |
 |------|-------------|
 | `--task-id <id>` | Task to attach the file to |
 | `--file <path>` | Local file path to upload |
-| `--filename <name>` | Override the filename shown in ClickUp (defaults to the local file name) |
+| `--filename <name>` | Override the filename shown in ClickUp |
+| `--attachment-id <id>` | Attachment ID to download (see `attachment list`) |
+| `--output <path>` | Download destination (default: `./attachment-<id>-<title>`) |
 
 **Examples**
 
@@ -737,8 +796,11 @@ clickup attachment upload --task-id <id> --file <path> [--filename <name>]
 # Attach a design file to a task
 clickup attachment upload --task-id abc9zt --file ./designs/mockup-v3.fig
 
-# Upload with a custom display name
-clickup attachment upload --task-id abc9zt --file ./export.pdf --filename "Q1-Report-Final.pdf"
+# List all attachments on a task
+clickup attachment list --task-id abc9zt
+
+# Download an attachment
+clickup attachment download --task-id abc9zt --attachment-id att_01 --output ./report.pdf
 ```
 
 ---
@@ -1137,10 +1199,12 @@ clickup webhook delete wh_001 --confirm
 
 ## Templates
 
-Templates provide reusable list and task structures. Currently read-only via the API.
+Templates provide reusable task, list, and folder structures. Create templates in the ClickUp UI, then apply them via the CLI to roll out the same process repeatedly.
 
-```
-clickup template list --workspace-id <id> [--page <n>]
+### List templates
+
+```bash
+clickup template list [--workspace-id <id>] [--page <n>]
 ```
 
 | Flag | Description |
@@ -1148,11 +1212,67 @@ clickup template list --workspace-id <id> [--page <n>]
 | `--workspace-id <id>` | Workspace to list templates for |
 | `--page <n>` | Page number (100 results per page) |
 
+### Apply a task template
+
+```bash
+clickup template apply-task --list-id <id> --template-id <id> [--name <name>]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--list-id <id>` | List to create the task in |
+| `--template-id <id>` | ID of the template to apply |
+| `--name <name>` | Override the template name for this instance |
+
+### Apply a list template
+
+```bash
+clickup template apply-list --template-id <id> --folder-id <id> [--name <name>]
+clickup template apply-list --template-id <id> --space-id <id> [--name <name>]
+```
+
+Provide exactly one of `--folder-id` (list inside a folder) or `--space-id` (folderless list inside a space).
+
+| Flag | Description |
+|------|-------------|
+| `--template-id <id>` | ID of the template to apply |
+| `--folder-id <id>` | Folder to create the list in |
+| `--space-id <id>` | Space to create the list in (folderless) |
+| `--name <name>` | Override the template name for this instance |
+
+### Apply a folder template
+
+```bash
+clickup template apply-folder --space-id <id> --template-id <id> [--name <name>]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--space-id <id>` | Space to create the folder in |
+| `--template-id <id>` | ID of the template to apply |
+| `--name <name>` | Override the template name for this instance |
+
 **Examples**
 
 ```bash
-# List all available templates in the workspace
+# List all available templates
 clickup template list --workspace-id 9876543
+
+# Apply a task template
+clickup template apply-task --list-id 998877 --template-id tmpl_abc --name "Q1 Launch"
+
+# Apply a list template into a folder
+clickup template apply-list --folder-id 112233 --template-id tmpl_xyz --name "Sprint 14"
+
+# Apply a list template directly into a space
+clickup template apply-list --space-id 55544 --template-id tmpl_xyz
+
+# Apply a folder template to scaffold a whole project
+clickup template apply-folder --space-id 55544 --template-id tmpl_folder --name "Client: Acme Corp"
+
+# Roll out a template and capture the new task ID for further configuration
+TASK_ID=$(clickup template apply-task --list-id 998877 --template-id tmpl_abc --format id)
+clickup task update "$TASK_ID" --assignee-add 112233 --due-date 1735689600000
 ```
 
 ---
