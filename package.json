@@ -1,10 +1,10 @@
 {
   "name": "clickup-agent-cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "CLI covering the entire ClickUp API v2 surface",
   "type": "module",
   "bin": {
-    "clickup": "./dist/bin/clickup.js"
+    "clickup": "./dist/clickup.js"
   },
   "files": [
     "dist",
