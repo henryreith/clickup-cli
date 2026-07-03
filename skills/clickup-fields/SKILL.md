@@ -13,7 +13,7 @@ Custom fields are defined at the list level and set on individual tasks.
 ```bash
 clickup field list --list-id <id>                              # List field definitions
 clickup field set --task-id <id> --field-id <fid> --value <v>  # Set a field value
-clickup field remove --task-id <id> --field-id <fid>           # Clear a field value
+clickup field remove --task-id <id> --field-id <fid> --confirm # Clear a field value
 ```
 
 ### Value formats by field type
@@ -74,10 +74,10 @@ clickup field list --list-id 998877 --format md
 ```bash
 clickup attachment upload --task-id <id> --file <path> [--filename <name>]
 clickup attachment list --task-id <id>
-clickup attachment download --task-id <id> --attachment-id <id> [--output <path>]
+clickup attachment download --task-id <id> --attachment-id <id> [--output <path>] [--force]
 ```
 
-`attachment download` fetches the file with the auth header and writes to `--output` (default: `./attachment-<id>-<title>`). Shows a spinner during download.
+`attachment download` fetches the file with the auth header and writes to `--output` (default: `./attachment-<id>-<title>`). Refuses to overwrite an existing file unless `--force` is passed. Shows a spinner during download.
 
 ## Discovery
 

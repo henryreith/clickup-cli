@@ -160,14 +160,14 @@ describe('ClickUpClient', () => {
     expect(output).toContain('200')
   })
 
-  it('handles rate limit headers', async () => {
+  it('does not wait on rate limit headers when the response succeeds', async () => {
     const fetchSpy = mockFetch([
       {
         status: 200,
         body: { id: '1' },
         headers: {
           'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + 1),
+          'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + 60),
         },
       },
     ])
@@ -175,8 +175,34 @@ describe('ClickUpClient', () => {
 
     const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
     const client = new ClickUpClient({ token: 'pk_test' })
+    const start = Date.now()
     await client.get('/user')
 
+    expect(Date.now() - start).toBeLessThan(1000)
+    const output = (stderrSpy.mock.calls as unknown[][]).map(c => c[0]).join('')
+    expect(output).not.toContain('Rate limited')
+  })
+
+  it('waits for the rate limit reset before retrying a 429', async () => {
+    const fetchSpy = mockFetch([
+      {
+        status: 429,
+        body: { err: 'Rate limit reached' },
+        headers: {
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + 1),
+        },
+      },
+      { status: 200, body: { id: '1' } },
+    ])
+    vi.stubGlobal('fetch', fetchSpy)
+
+    const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+    const client = new ClickUpClient({ token: 'pk_test', retryDelay: 1 })
+    const result = await client.get<{ id: string }>('/user')
+
+    expect(result.id).toBe('1')
+    expect(fetchSpy).toHaveBeenCalledTimes(2)
     const output = (stderrSpy.mock.calls as unknown[][]).map(c => c[0]).join('')
     expect(output).toContain('Rate limited')
   })

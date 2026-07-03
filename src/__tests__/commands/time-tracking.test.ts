@@ -171,7 +171,7 @@ describe('time tracking commands', () => {
       const { program, mockClient, baseArgs } = createTestProgram('w1')
       ;(mockClient.delete as ReturnType<typeof vi.fn>).mockResolvedValue({})
 
-      await program.parseAsync([...baseArgs, 'time', 'delete', 'te1'])
+      await program.parseAsync([...baseArgs, 'time', 'delete', 'te1', '--confirm'])
 
       expect(mockClient.delete).toHaveBeenCalledWith('/team/w1/time_entries/te1')
     })

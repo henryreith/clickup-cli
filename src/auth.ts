@@ -1,6 +1,6 @@
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http'
-import { randomBytes, createHash } from 'node:crypto'
-import { config } from './config.js'
+import { randomBytes, createHash, timingSafeEqual } from 'node:crypto'
+import { getActiveProfileKey, getProfile, setProfile } from './config.js'
 
 const CLICKUP_AUTHORIZE_URL = 'https://app.clickup.com/api'
 const CLICKUP_TOKEN_URL = 'https://api.clickup.com/api/v2/oauth/token'
@@ -16,14 +16,22 @@ function generateCodeChallenge(verifier: string): string {
   return createHash('sha256').update(verifier).digest('base64url')
 }
 
-function buildAuthorizeUrl(clientId: string, codeChallenge: string): string {
+function buildAuthorizeUrl(clientId: string, codeChallenge: string, state: string): string {
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: REDIRECT_URI,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
+    state,
   })
   return `${CLICKUP_AUTHORIZE_URL}?${params.toString()}`
+}
+
+function statesMatch(expected: string, received: string): boolean {
+  const a = Buffer.from(expected)
+  const b = Buffer.from(received)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
 }
 
 async function exchangeCodeForToken(
@@ -56,7 +64,7 @@ async function exchangeCodeForToken(
   return token
 }
 
-function waitForCallback(server: Server): Promise<string> {
+function waitForCallback(server: Server, expectedState: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       server.close()
@@ -74,6 +82,7 @@ function waitForCallback(server: Server): Promise<string> {
 
       const code = url.searchParams.get('code')
       const error = url.searchParams.get('error')
+      const state = url.searchParams.get('state')
 
       if (error) {
         res.writeHead(200, { 'Content-Type': 'text/html' })
@@ -81,6 +90,12 @@ function waitForCallback(server: Server): Promise<string> {
         clearTimeout(timeout)
         server.close()
         reject(new Error(`OAuth error: ${error}`))
+        return
+      }
+
+      if (!state || !statesMatch(expectedState, state)) {
+        res.writeHead(400, { 'Content-Type': 'text/html' })
+        res.end('<html><body><h1>Invalid request</h1><p>State mismatch. Please retry the login.</p></body></html>')
         return
       }
 
@@ -101,19 +116,24 @@ function waitForCallback(server: Server): Promise<string> {
 
 async function openBrowser(url: string): Promise<void> {
   const { platform } = process
+  const { execFile } = await import('node:child_process')
+
   let command: string
+  let args: string[]
 
   if (platform === 'darwin') {
     command = 'open'
+    args = [url]
   } else if (platform === 'win32') {
-    command = 'start'
+    command = 'cmd'
+    args = ['/c', 'start', '', url]
   } else {
     command = 'xdg-open'
+    args = [url]
   }
 
-  const { exec } = await import('node:child_process')
   return new Promise((resolve) => {
-    exec(`${command} "${url}"`, () => {
+    execFile(command, args, () => {
       resolve()
     })
   })
@@ -137,24 +157,26 @@ export async function oauthLogin(): Promise<string> {
 
   const codeVerifier = generateCodeVerifier()
   const codeChallenge = generateCodeChallenge(codeVerifier)
+  const state = randomBytes(24).toString('base64url')
 
   const server = createServer()
   await new Promise<void>((resolve, reject) => {
-    server.listen(CALLBACK_PORT, () => resolve())
+    server.listen(CALLBACK_PORT, '127.0.0.1', () => resolve())
     server.on('error', reject)
   })
 
-  const authorizeUrl = buildAuthorizeUrl(clientId, codeChallenge)
+  const authorizeUrl = buildAuthorizeUrl(clientId, codeChallenge, state)
   process.stderr.write(`Opening browser for authentication...\n`)
   process.stderr.write(`If the browser does not open, visit:\n${authorizeUrl}\n`)
 
   await openBrowser(authorizeUrl)
 
-  const code = await waitForCallback(server)
+  const code = await waitForCallback(server, state)
   process.stderr.write('Exchanging code for token...\n')
 
   const token = await exchangeCodeForToken(code, clientId, clientSecret, codeVerifier)
-  config.set('token', token)
+  const profileKey = getActiveProfileKey()
+  setProfile(profileKey, { ...getProfile(profileKey), token })
 
   return token
 }

@@ -129,7 +129,7 @@ describe('custom field commands', () => {
 
       await program.parseAsync([
         'node', 'clickup', 'field', 'remove',
-        '--task-id', 't1', '--field-id', 'cf1',
+        '--task-id', 't1', '--field-id', 'cf1', '--confirm',
       ])
 
       expect(mockClient.delete).toHaveBeenCalledWith('/task/t1/field/cf1')

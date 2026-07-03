@@ -1,4 +1,4 @@
-import { Command } from 'commander'
+import { Command, Option } from 'commander'
 import { ClickUpClient, type ClickUpClientOptions } from './client.js'
 import { ClickUpError, DryRunComplete, mapToExitCode, EXIT_CODES } from './errors.js'
 import { resolveToken, resolveOutputFormat, setProfileOverride } from './config.js'
@@ -33,6 +33,7 @@ import { registerSharedHierarchyCommands } from './commands/shared-hierarchy.js'
 import { registerDocCommands } from './commands/doc.js'
 import { registerSkillCommands } from './commands/skill-cmd.js'
 import { registerChatCommands } from './commands/chat.js'
+import { intArg } from './parse.js'
 
 const VERSION = '0.3.1'
 
@@ -47,13 +48,15 @@ export function createProgram(): Command {
     .option('--token-file <path>', 'Read API token from this file path')
     .option('--profile <name>', 'Profile to use (key, workspace name, or nickname)')
     .option('--workspace-id <id>', 'Workspace ID')
-    .option('--format <format>', 'Output format (table|json|csv|tsv|quiet|id|md)')
+    .addOption(
+      new Option('--format <format>', 'Output format').choices(['table', 'json', 'csv', 'tsv', 'quiet', 'id', 'md']),
+    )
     .option('--no-color', 'Disable colors')
     .option('--no-header', 'Omit column headers')
     .option('--fields <fields>', 'Show only specified fields (comma-separated)')
     .option('--filter <filter>', 'Client-side filter (key=value)')
     .option('--sort <sort>', 'Sort by field (field[:asc|:desc])')
-    .option('--limit <n>', 'Limit results', parseInt)
+    .option('--limit <n>', 'Limit results', intArg('--limit'))
     .option('--verbose', 'Show request details')
     .option('--debug', 'Full debug output')
     .option('--dry-run', 'Print what would be sent without executing')
@@ -100,6 +103,11 @@ export function getOutputOptions(program: Command): OutputOptions {
 }
 
 export function run(): void {
+  // Exit quietly when output is piped to a command that closes early (e.g. head)
+  process.stdout.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EPIPE') process.exit(EXIT_CODES.SUCCESS)
+  })
+
   const program = createProgram()
 
   // Apply --profile override before any action runs

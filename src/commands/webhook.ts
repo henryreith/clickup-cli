@@ -127,6 +127,11 @@ export function registerWebhookCommands(
     .option('--event <event>', 'Event to subscribe to (repeatable, replaces existing)', collect, [])
     .option('--status <status>', 'Status (active or inactive)')
     .action(async (webhookId: string, opts: { endpoint?: string; event: string[]; status?: string }) => {
+      if (opts.status !== undefined && opts.status !== 'active' && opts.status !== 'inactive') {
+        process.stderr.write('Error: --status must be "active" or "inactive".\n')
+        process.exit(2)
+        return
+      }
       const client = getClient()
       const body: Record<string, unknown> = {}
       if (opts.endpoint !== undefined) body['endpoint'] = opts.endpoint

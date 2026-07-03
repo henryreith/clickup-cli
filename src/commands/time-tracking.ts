@@ -12,6 +12,7 @@ import type {
   TimeEntryHistoryResponse,
 } from '../types/time-tracking.js'
 import { registerSchema } from '../schema.js'
+import { parseIntStrict, parseBoolStrict } from '../parse.js'
 
 registerSchema('time', 'list', 'List time entries for a task or workspace', [
   { flag: '--task-id', type: 'string', required: false, description: 'Task ID (or use --workspace-id for workspace-wide)' },
@@ -48,6 +49,7 @@ registerSchema('time', 'update', 'Update a time entry', [
 registerSchema('time', 'delete', 'Delete a time entry', [
   { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
   { flag: '<timer-id>', type: 'string', required: true, description: 'Time entry ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
 ])
 
 registerSchema('time', 'running', 'Get current running timer', [
@@ -174,12 +176,12 @@ export function registerTimeTrackingCommands(
     .action(async (opts: { taskId: string; duration: string; start: string; description?: string; assignee?: string; billable?: string; tag: string[] }) => {
       const client = getClient()
       const body: Record<string, unknown> = {
-        duration: parseInt(opts.duration, 10),
+        duration: parseIntStrict(opts.duration, '--duration'),
         start: String(parseDate(opts.start)),
       }
       if (opts.description !== undefined) body['description'] = opts.description
-      if (opts.assignee !== undefined) body['assignee'] = parseInt(opts.assignee, 10)
-      if (opts.billable !== undefined) body['billable'] = opts.billable === 'true'
+      if (opts.assignee !== undefined) body['assignee'] = parseIntStrict(opts.assignee, '--assignee')
+      if (opts.billable !== undefined) body['billable'] = parseBoolStrict(opts.billable, '--billable')
       if (opts.tag.length) body['tags'] = opts.tag.map((t) => ({ name: t }))
       const data = await client.post<TimeEntrySingleResponse>(`/task/${opts.taskId}/time`, body)
       process.stdout.write(`Created time entry ${data.data?.id ?? ''}\n`)
@@ -201,9 +203,9 @@ export function registerTimeTrackingCommands(
       const client = getClient()
       const body: Record<string, unknown> = {}
       if (opts.description !== undefined) body['description'] = opts.description
-      if (opts.duration !== undefined) body['duration'] = parseInt(opts.duration, 10)
+      if (opts.duration !== undefined) body['duration'] = parseIntStrict(opts.duration, '--duration')
       if (opts.start !== undefined) body['start'] = String(parseDate(opts.start))
-      if (opts.billable !== undefined) body['billable'] = opts.billable === 'true'
+      if (opts.billable !== undefined) body['billable'] = parseBoolStrict(opts.billable, '--billable')
       if (opts.tag.length) {
         body['tags'] = opts.tag.map((t) => ({ name: t }))
         if (opts.tagAction) body['tag_action'] = opts.tagAction
@@ -216,10 +218,24 @@ export function registerTimeTrackingCommands(
     .command('delete')
     .description('Delete a time entry')
     .argument('<timer-id>', 'Time entry ID')
-    .action(async (timerId: string) => {
+    .option('--confirm', 'Skip confirmation prompt')
+    .action(async (timerId: string, opts: { confirm?: boolean }) => {
       const workspaceId = requireWorkspaceId(program)
       if (!workspaceId) return
       const client = getClient()
+      if (!opts.confirm) {
+        if (!process.stdin.isTTY) {
+          process.stderr.write('Error: Use --confirm to delete in non-interactive mode.\n')
+          process.exit(2)
+          return
+        }
+        const { confirm } = await import('@inquirer/prompts')
+        const yes = await confirm({ message: `Delete time entry ${timerId}?` })
+        if (!yes) {
+          process.stdout.write('Cancelled.\n')
+          return
+        }
+      }
       await client.delete(`/team/${workspaceId}/time_entries/${timerId}`)
       process.stdout.write(`Deleted time entry ${timerId}\n`)
     })
@@ -267,7 +283,7 @@ export function registerTimeTrackingCommands(
       const client = getClient()
       const body: Record<string, unknown> = { tid: opts.taskId }
       if (opts.description !== undefined) body['description'] = opts.description
-      if (opts.billable !== undefined) body['billable'] = opts.billable === 'true'
+      if (opts.billable !== undefined) body['billable'] = parseBoolStrict(opts.billable, '--billable')
       if (opts.tag.length) body['tags'] = opts.tag.map((t) => ({ name: t }))
       const data = await client.post<TimeEntrySingleResponse>(`/team/${workspaceId}/time_entries/start`, body)
       process.stdout.write(`Started timer ${data.data?.id ?? ''}\n`)

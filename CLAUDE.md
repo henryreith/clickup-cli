@@ -147,8 +147,17 @@ Whenever a new command is added, an existing command changes behavior, or any us
 - Update the relevant skill file(s) in `skills/` (sub-skill and/or recipe as appropriate)
 - Update `skills/clickup/SKILL.md` root index table if a new skill was added or removed
 - Update `COMMANDS.md` with the full command reference
-- Update `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` version and skill count
+- Update `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` skill count (version is auto-synced by `npm version`)
 Skills and plugin manifest updates are part of the definition of done, not optional cleanup.
+
+### Versioning and Release
+
+- `package.json` is the single source of truth for the version number
+- Run `npm version <patch|minor|major>` to bump -- this triggers `scripts/sync-version.js` automatically, which patches the version in `src/cli.ts`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json` and stages all four files
+- Do NOT manually edit the version in `src/cli.ts`, `plugin.json`, or `marketplace.json` -- the sync script owns those
+- Push the commit and tag: `git push --follow-tags`
+- GitHub Actions (`publish.yml`) detects the `v*` tag and publishes to npm automatically -- no manual `npm publish` needed
+- The publish workflow runs typecheck, tests, and build before publishing, and uses OIDC provenance (`--provenance`)
 
 ### CLAUDE.md as Living Document
 This file is the authoritative project guide. Read it at the start of every session. Update it whenever new patterns, conventions, or standing rules are established. Any agent working on this project should treat CLAUDE.md as the first thing to read and the last thing to update.

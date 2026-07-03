@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
+import { resolveWorkspaceId } from '../config.js'
 import type { CustomFieldListResponse } from '../types/custom-field.js'
 import { registerSchema } from '../schema.js'
 
@@ -21,6 +22,7 @@ registerSchema('field', 'set', 'Set a custom field value on a task', [
 registerSchema('field', 'remove', 'Remove a custom field value from a task', [
   { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
   { flag: '--field-id', type: 'string', required: true, description: 'Field ID' },
+  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
 ])
 
 const FIELD_COLUMNS: ColumnDef[] = [
@@ -45,7 +47,7 @@ export function registerFieldCommands(
     .option('--space-id <id>', 'Space ID')
     .action(async (opts: { listId?: string; folderId?: string; spaceId?: string }) => {
       const client = getClient()
-      const globalWorkspaceId = program.opts()['workspaceId'] as string | undefined
+      const globalWorkspaceId = resolveWorkspaceId(program.opts()['workspaceId'] as string | undefined)
       let endpoint: string
       if (opts.listId) {
         endpoint = `/list/${opts.listId}/field`
@@ -83,8 +85,22 @@ export function registerFieldCommands(
     .description('Remove a custom field value from a task')
     .requiredOption('--task-id <id>', 'Task ID')
     .requiredOption('--field-id <fid>', 'Field ID')
-    .action(async (opts: { taskId: string; fieldId: string }) => {
+    .option('--confirm', 'Skip confirmation prompt')
+    .action(async (opts: { taskId: string; fieldId: string; confirm?: boolean }) => {
       const client = getClient()
+      if (!opts.confirm) {
+        if (!process.stdin.isTTY) {
+          process.stderr.write('Error: Use --confirm to remove in non-interactive mode.\n')
+          process.exit(2)
+          return
+        }
+        const { confirm } = await import('@inquirer/prompts')
+        const yes = await confirm({ message: `Remove field ${opts.fieldId} value from task ${opts.taskId}?` })
+        if (!yes) {
+          process.stdout.write('Cancelled.\n')
+          return
+        }
+      }
       await client.delete(`/task/${opts.taskId}/field/${opts.fieldId}`)
       process.stdout.write(`Removed field ${opts.fieldId} from task ${opts.taskId}\n`)
     })

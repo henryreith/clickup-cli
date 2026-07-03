@@ -4,6 +4,7 @@ import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { ListListResponse } from '../types/list.js'
 import { registerSchema } from '../schema.js'
+import { enumIntArg, parseDateStrict } from '../parse.js'
 
 registerSchema('list', 'list', 'List lists in a folder', [
   { flag: '--folder-id', type: 'string', required: true, description: 'Folder ID' },
@@ -114,13 +115,13 @@ export function registerListCommands(
     .requiredOption('--name <name>', 'List name')
     .option('--content <desc>', 'List description')
     .option('--due-date <ts>', 'Due date (Unix ms)')
-    .option('--priority <n>', 'Priority (1-4)', parseInt)
+    .option('--priority <n>', 'Priority (1-4)', enumIntArg('--priority', [1, 2, 3, 4]))
     .option('--status <s>', 'Default status')
     .action(async (opts: { folderId: string; name: string; content?: string; dueDate?: string; priority?: number; status?: string }) => {
       const client = getClient()
       const body: Record<string, unknown> = { name: opts.name }
       if (opts.content !== undefined) body['content'] = opts.content
-      if (opts.dueDate !== undefined) body['due_date'] = parseInt(opts.dueDate, 10)
+      if (opts.dueDate !== undefined) body['due_date'] = parseDateStrict(opts.dueDate, '--due-date')
       if (opts.priority !== undefined) body['priority'] = opts.priority
       if (opts.status !== undefined) body['status'] = opts.status
       const data = await client.post<Record<string, unknown>>(`/folder/${opts.folderId}/list`, body)
@@ -154,7 +155,7 @@ export function registerListCommands(
       const body: Record<string, unknown> = {}
       if (opts.name !== undefined) body['name'] = opts.name
       if (opts.content !== undefined) body['content'] = opts.content
-      if (opts.dueDate !== undefined) body['due_date'] = parseInt(opts.dueDate, 10)
+      if (opts.dueDate !== undefined) body['due_date'] = parseDateStrict(opts.dueDate, '--due-date')
       if (opts.unsetStatus) body['unset_status'] = true
       const data = await client.put<Record<string, unknown>>(`/list/${listId}`, body)
       formatOutput(data, LIST_COLUMNS, getOutputOptions(program))

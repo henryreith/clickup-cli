@@ -80,7 +80,7 @@ Every command supports multiple output formats:
 
 ## AI Agent Usage
 
-The CLI is built from the ground up for AI agents, following the "CLI as execution layer, skills as guidance layer" pattern. It ships as a Claude Code plugin with 23 agent skills, and works with any agent platform that can run bash commands.
+The CLI is built from the ground up for AI agents, following the "CLI as execution layer, skills as guidance layer" pattern. It ships as a Claude Code plugin with 25 agent skills, and works with any agent platform that can run bash commands.
 
 **vs ClickUp MCP:** This CLI covers the same operations as the official ClickUp MCP server (tasks, docs, time tracking, chat, members, hierarchy) plus more, while consuming far fewer tokens. A full skills hierarchy loads in ~150 tokens at session start vs injecting an entire API schema. Works in any agent platform that supports bash -- not just MCP-compatible hosts.
 
@@ -93,14 +93,14 @@ Install the ClickUp CLI as a Claude Code plugin for zero-friction access to all 
 /plugin marketplace add henryreith/clickup-cli
 
 # Install the plugin
-/plugin install clickup@clickup-cli
+/plugin install clickup@clickup-agent-cli
 
 # Use skills directly
 /clickup:weekly-review 12345678
 /clickup:sprint-planning list-id-here
 ```
 
-Once installed, Claude Code auto-discovers all 23 skills and loads them on demand. Recipe skills like `/clickup:weekly-review` run in isolated subagents with full ClickUp CLI access.
+Once installed, Claude Code auto-discovers all 25 skills and loads them on demand. Recipe skills like `/clickup:weekly-review` run in isolated subagents with full ClickUp CLI access.
 
 ### Claude Agent SDK
 
@@ -141,8 +141,8 @@ clickup skill show clickup-weekly-review
 
 **Three skill tiers:**
 - **Root skill** - Index and router. What the CLI does, how to discover more.
-- **Sub-skills** (10) - Per-resource command reference. Tasks, spaces, comments, time tracking, chat, etc.
-- **Recipe skills** (12) - Multi-step workflow guides that accept natural language arguments. Scope any recipe to a specific team, department, or person.
+- **Sub-skills** (11) - Per-resource command reference. Tasks, spaces, comments, time tracking, chat, etc.
+- **Recipe skills** (13) - Multi-step workflow guides that accept natural language arguments. Scope any recipe to a specific team, department, or person.
 
 **Example recipe invocations:**
 ```bash

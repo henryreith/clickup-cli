@@ -2,6 +2,7 @@ import { Command } from 'commander'
 import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
+import { resolveWorkspaceId } from '../config.js'
 import type { ViewListResponse, ViewResponse, ViewTasksResponse } from '../types/view.js'
 import { registerSchema } from '../schema.js'
 
@@ -68,6 +69,12 @@ function resolveViewParent(
   if (opts.spaceId) parents.push({ segment: 'space', id: opts.spaceId })
   if (opts.folderId) parents.push({ segment: 'folder', id: opts.folderId })
   if (opts.listId) parents.push({ segment: 'list', id: opts.listId })
+
+  if (parents.length === 0) {
+    // No explicit parent flag: fall back to the workspace from env/profile
+    const resolvedWsId = resolveWorkspaceId(undefined)
+    if (resolvedWsId) parents.push({ segment: 'team', id: resolvedWsId })
+  }
 
   if (parents.length === 0) {
     process.stderr.write('Error: Provide one of --workspace-id, --space-id, --folder-id, or --list-id.\n')

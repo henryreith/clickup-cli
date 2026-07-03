@@ -4,6 +4,7 @@ import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { ChecklistResponse } from '../types/checklist.js'
 import { registerSchema } from '../schema.js'
+import { intArg, parseIntStrict } from '../parse.js'
 
 registerSchema('checklist', 'create', 'Create a checklist on a task', [
   { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
@@ -78,7 +79,7 @@ export function registerChecklistCommands(
     .description('Update a checklist')
     .argument('<checklist-id>', 'Checklist ID')
     .option('--name <name>', 'New checklist name')
-    .option('--position <n>', 'Position (0-indexed)', parseInt)
+    .option('--position <n>', 'Position (0-indexed)', intArg('--position'))
     .action(async (checklistId: string, opts: { name?: string; position?: number }) => {
       const client = getClient()
       const body: Record<string, unknown> = {}
@@ -123,7 +124,7 @@ export function registerChecklistCommands(
     .action(async (checklistId: string, opts: { name: string; assignee?: string; resolved?: string; parent?: string }) => {
       const client = getClient()
       const body: Record<string, unknown> = { name: opts.name }
-      if (opts.assignee !== undefined) body['assignee'] = parseInt(opts.assignee, 10)
+      if (opts.assignee !== undefined) body['assignee'] = parseIntStrict(opts.assignee, '--assignee')
       if (opts.resolved !== undefined) body['resolved'] = opts.resolved === 'true'
       if (opts.parent !== undefined) body['parent'] = opts.parent
       const data = await client.post<ChecklistResponse>(`/checklist/${checklistId}/checklist_item`, body)
@@ -144,7 +145,7 @@ export function registerChecklistCommands(
       const body: Record<string, unknown> = {}
       if (opts.name !== undefined) body['name'] = opts.name
       if (opts.resolved !== undefined) body['resolved'] = opts.resolved === 'true'
-      if (opts.assignee !== undefined) body['assignee'] = parseInt(opts.assignee, 10)
+      if (opts.assignee !== undefined) body['assignee'] = parseIntStrict(opts.assignee, '--assignee')
       if (opts.parent !== undefined) body['parent'] = opts.parent
       const data = await client.put<ChecklistResponse>(`/checklist/${checklistId}/checklist_item/${opts.itemId}`, body)
       formatOutput(data.checklist, CHECKLIST_COLUMNS, getOutputOptions(program))

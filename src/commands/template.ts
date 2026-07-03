@@ -5,6 +5,7 @@ import { getOutputOptions } from '../cli.js'
 import { resolveWorkspaceId } from '../config.js'
 import { registerSchema } from '../schema.js'
 import type { TemplateListResponse, ApplyTaskResponse, ApplyListResponse, ApplyFolderResponse } from '../types/template.js'
+import { intArg } from '../parse.js'
 
 const TEMPLATE_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 20 },
@@ -55,7 +56,7 @@ export function registerTemplateCommands(
   template
     .command('list')
     .description('List task templates')
-    .option('--page <n>', 'Page number (starts at 0)', parseInt)
+    .option('--page <n>', 'Page number (starts at 0)', intArg('--page'))
     .action(async (opts: { page?: number }) => {
       const workspaceId = requireWorkspaceId(program)
       if (!workspaceId) return

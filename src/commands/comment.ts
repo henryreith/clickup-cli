@@ -4,6 +4,7 @@ import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { CommentListResponse } from '../types/comment.js'
 import { registerSchema } from '../schema.js'
+import { parseIntStrict } from '../parse.js'
 
 registerSchema('comment', 'list', 'List comments on a task, list, or view', [
   { flag: '--task-id', type: 'string', required: false, description: 'Task ID (provide one parent)' },
@@ -120,7 +121,7 @@ export function registerCommentCommands(
       if (!parent) return
       const client = getClient()
       const body: Record<string, unknown> = { comment_text: opts.text }
-      if (opts.assignee !== undefined) body['assignee'] = parseInt(opts.assignee, 10)
+      if (opts.assignee !== undefined) body['assignee'] = parseIntStrict(opts.assignee, '--assignee')
       if (opts.notifyAll) body['notify_all'] = true
       const data = await client.post<Record<string, unknown>>(`/${parent.type}/${parent.id}/comment`, body)
       process.stdout.write(`Created comment ${data['id'] ?? ''}\n`)
@@ -136,7 +137,7 @@ export function registerCommentCommands(
     .action(async (commentId: string, opts: { text: string; assignee?: string; resolved?: string }) => {
       const client = getClient()
       const body: Record<string, unknown> = { comment_text: opts.text }
-      if (opts.assignee !== undefined) body['assignee'] = parseInt(opts.assignee, 10)
+      if (opts.assignee !== undefined) body['assignee'] = parseIntStrict(opts.assignee, '--assignee')
       if (opts.resolved !== undefined) body['resolved'] = opts.resolved === 'true'
       await client.put(`/comment/${commentId}`, body)
       process.stdout.write(`Updated comment ${commentId}\n`)
@@ -186,7 +187,7 @@ export function registerCommentCommands(
     .action(async (commentId: string, opts: { text: string; assignee?: string; notifyAll?: boolean }) => {
       const client = getClient()
       const body: Record<string, unknown> = { comment_text: opts.text }
-      if (opts.assignee !== undefined) body['assignee'] = parseInt(opts.assignee, 10)
+      if (opts.assignee !== undefined) body['assignee'] = parseIntStrict(opts.assignee, '--assignee')
       if (opts.notifyAll) body['notify_all'] = true
       const data = await client.post<Record<string, unknown>>(`/comment/${commentId}/thread`, body)
       process.stdout.write(`Created reply ${data['id'] ?? ''}\n`)

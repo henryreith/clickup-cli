@@ -66,9 +66,22 @@ export class ClickUpClient {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), this.timeout)
 
+    // Only send the API token to ClickUp hosts. Attachment URLs can point at
+    // presigned CDN/S3 locations that must not receive the credential.
+    const headers: Record<string, string> = {}
+    try {
+      const { hostname } = new URL(url)
+      if (hostname === 'clickup.com' || hostname.endsWith('.clickup.com')) {
+        headers['Authorization'] = this.token
+      }
+    } catch {
+      clearTimeout(timeoutId)
+      throw new ClickUpError(`Invalid download URL: ${url}`, 0, undefined, undefined)
+    }
+
     try {
       const response = await fetch(url, {
-        headers: { Authorization: this.token },
+        headers,
         signal: controller.signal,
       })
       clearTimeout(timeoutId)
@@ -212,18 +225,6 @@ export class ClickUpClient {
           process.stderr.write(`[${method}] ${path} ${response.status} ${response.statusText} (${elapsed}ms)\n`)
         }
 
-        // Check rate limit headers
-        const remaining = response.headers.get('X-RateLimit-Remaining')
-        const reset = response.headers.get('X-RateLimit-Reset')
-        if (remaining === '0' && reset) {
-          const resetTime = parseInt(reset, 10) * 1000
-          const waitMs = Math.max(0, resetTime - Date.now())
-          if (waitMs > 0) {
-            process.stderr.write(`Rate limited. Waiting ${Math.ceil(waitMs / 1000)}s...\n`)
-            await this.sleep(waitMs)
-          }
-        }
-
         if (!response.ok) {
           const responseBody = await this.safeJson(response)
           const error = parseApiError(responseBody, response.status)
@@ -237,6 +238,17 @@ export class ClickUpClient {
           }
 
           if (RETRYABLE_STATUSES.has(response.status) && attempt < this.maxRetries) {
+            if (response.status === 429) {
+              const reset = response.headers.get('X-RateLimit-Reset')
+              if (reset) {
+                const resetTime = parseInt(reset, 10) * 1000
+                const waitMs = Math.min(Math.max(0, resetTime - Date.now()), 60_000)
+                if (waitMs > 0) {
+                  process.stderr.write(`Rate limited. Waiting ${Math.ceil(waitMs / 1000)}s...\n`)
+                  await this.sleep(waitMs)
+                }
+              }
+            }
             lastError = error
             continue
           }

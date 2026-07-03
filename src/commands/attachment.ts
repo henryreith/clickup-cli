@@ -1,5 +1,5 @@
-import { writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { writeFileSync, existsSync } from 'node:fs'
+import { join, basename, resolve } from 'node:path'
 import { Command } from 'commander'
 import type { ClickUpClient } from '../client.js'
 import { formatOutput, type ColumnDef } from '../output.js'
@@ -20,6 +20,7 @@ registerSchema('attachment', 'download', 'Download an attachment from a task', [
   { flag: '--task-id', type: 'string', required: true, description: 'Task ID' },
   { flag: '--attachment-id', type: 'string', required: true, description: 'Attachment ID' },
   { flag: '--output', type: 'string', required: false, description: 'Output file path (default: ./attachment-<id>-<title>)' },
+  { flag: '--force', type: 'boolean', required: false, description: 'Overwrite the output file if it exists' },
 ])
 
 const ATTACHMENT_COLUMNS: ColumnDef[] = [
@@ -73,7 +74,8 @@ export function registerAttachmentCommands(
     .requiredOption('--task-id <id>', 'Task ID')
     .requiredOption('--attachment-id <id>', 'Attachment ID')
     .option('--output <path>', 'Output file path')
-    .action(async (opts: { taskId: string; attachmentId: string; output?: string }) => {
+    .option('--force', 'Overwrite the output file if it exists')
+    .action(async (opts: { taskId: string; attachmentId: string; output?: string; force?: boolean }) => {
       const { default: ora } = await import('ora')
       const client = getClient()
 
@@ -88,10 +90,20 @@ export function registerAttachmentCommands(
         return
       }
 
-      const outputPath =
-        opts.output ?? join(process.cwd(), `attachment-${attachment.id}-${attachment.title}`)
+      // The title comes from the API; strip any path components so a crafted
+      // filename cannot escape the working directory.
+      const safeTitle = basename(attachment.title.replace(/[/\\]/g, '_')) || 'file'
+      const outputPath = opts.output
+        ? resolve(opts.output)
+        : join(process.cwd(), `attachment-${attachment.id}-${safeTitle}`)
 
-      const spinner = ora(`Downloading ${attachment.title}...`).start()
+      if (existsSync(outputPath) && !opts.force) {
+        process.stderr.write(`Error: "${outputPath}" already exists. Use --force to overwrite or --output to pick another path.\n`)
+        process.exit(2)
+        return
+      }
+
+      const spinner = ora(`Downloading ${safeTitle}...`).start()
 
       try {
         const buffer = await client.downloadUrl(attachment.url)

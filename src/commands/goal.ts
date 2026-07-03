@@ -5,6 +5,7 @@ import { getOutputOptions } from '../cli.js'
 import { resolveWorkspaceId } from '../config.js'
 import type { GoalListResponse, GoalResponse, KeyResultResponse } from '../types/goal.js'
 import { registerSchema } from '../schema.js'
+import { parseIntStrict, parseFloatStrict } from '../parse.js'
 
 registerSchema('goal', 'list', 'List goals in a workspace', [
   { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
@@ -151,7 +152,7 @@ export function registerGoalCommands(
       if (opts.dueDate !== undefined) body['due_date'] = opts.dueDate
       if (opts.description !== undefined) body['description'] = opts.description
       if (opts.multipleOwners) body['multiple_owners'] = true
-      if (opts.owner.length) body['owners'] = opts.owner.map((id) => parseInt(id, 10))
+      if (opts.owner.length) body['owners'] = opts.owner.map((id) => parseIntStrict(id, '--owner'))
       if (opts.color !== undefined) body['color'] = opts.color
       const data = await client.post<GoalResponse>(`/team/${workspaceId}/goal`, body)
       process.stdout.write(`Created goal ${data.goal?.id ?? ''}\n`)
@@ -214,8 +215,8 @@ export function registerGoalCommands(
     .action(async (goalId: string, opts: { name: string; type: string; stepsStart?: string; stepsEnd?: string; unit?: string; taskIds: string[]; listIds: string[] }) => {
       const client = getClient()
       const body: Record<string, unknown> = { name: opts.name, type: opts.type }
-      if (opts.stepsStart !== undefined) body['steps_start'] = parseFloat(opts.stepsStart)
-      if (opts.stepsEnd !== undefined) body['steps_end'] = parseFloat(opts.stepsEnd)
+      if (opts.stepsStart !== undefined) body['steps_start'] = parseFloatStrict(opts.stepsStart, '--steps-start')
+      if (opts.stepsEnd !== undefined) body['steps_end'] = parseFloatStrict(opts.stepsEnd, '--steps-end')
       if (opts.unit !== undefined) body['unit'] = opts.unit
       if (opts.taskIds.length) body['task_ids'] = opts.taskIds
       if (opts.listIds.length) body['list_ids'] = opts.listIds
@@ -234,7 +235,7 @@ export function registerGoalCommands(
       const client = getClient()
       const body: Record<string, unknown> = {}
       if (opts.name !== undefined) body['name'] = opts.name
-      if (opts.stepsCurrent !== undefined) body['steps_current'] = parseFloat(opts.stepsCurrent)
+      if (opts.stepsCurrent !== undefined) body['steps_current'] = parseFloatStrict(opts.stepsCurrent, '--steps-current')
       if (opts.note !== undefined) body['note'] = opts.note
       await client.put(`/key_result/${keyResultId}`, body)
       process.stdout.write(`Updated key result ${keyResultId}\n`)

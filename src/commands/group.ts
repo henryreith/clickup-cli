@@ -5,6 +5,7 @@ import { getOutputOptions } from '../cli.js'
 import { resolveWorkspaceId } from '../config.js'
 import { registerSchema } from '../schema.js'
 import type { GroupListResponse } from '../types/group.js'
+import { parseIntStrict } from '../parse.js'
 
 const GROUP_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 14 },
@@ -86,7 +87,7 @@ export function registerGroupCommands(
       const client = getClient()
       const body: Record<string, unknown> = { name: opts.name }
       if (opts.memberId.length) {
-        body['members'] = opts.memberId.map((id) => ({ id: parseInt(id, 10) }))
+        body['members'] = opts.memberId.map((id) => ({ id: parseIntStrict(id, '--member-id') }))
       }
       const data = await client.post<Record<string, unknown>>(`/team/${workspaceId}/group`, body)
       process.stdout.write(`Created group ${(data as Record<string, unknown>)['id'] ?? ''}\n`)
@@ -104,8 +105,8 @@ export function registerGroupCommands(
       const body: Record<string, unknown> = {}
       if (opts.name !== undefined) body['name'] = opts.name
       const members: Record<string, unknown> = {}
-      if (opts.addMember.length) members['add'] = opts.addMember.map((id) => ({ id: parseInt(id, 10) }))
-      if (opts.removeMember.length) members['rem'] = opts.removeMember.map((id) => ({ id: parseInt(id, 10) }))
+      if (opts.addMember.length) members['add'] = opts.addMember.map((id) => ({ id: parseIntStrict(id, '--add-member') }))
+      if (opts.removeMember.length) members['rem'] = opts.removeMember.map((id) => ({ id: parseIntStrict(id, '--remove-member') }))
       if (Object.keys(members).length) body['members'] = members
       await client.put(`/group/${groupId}`, body)
       process.stdout.write(`Updated group ${groupId}\n`)

@@ -5,6 +5,7 @@ import { getOutputOptions } from '../cli.js'
 import { resolveWorkspaceId } from '../config.js'
 import { registerSchema } from '../schema.js'
 import type { DocListResponse, Doc, PageListResponse, Page } from '../types/doc.js'
+import { enumIntArg } from '../parse.js'
 
 const DOC_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 15 },
@@ -126,7 +127,7 @@ export function registerDocCommands(
     .description('Create a doc')
     .requiredOption('--name <name>', 'Doc name')
     .option('--parent-id <id>', 'Parent ID')
-    .option('--parent-type <type>', 'Parent type (4=space, 5=folder, 6=list, 7=task)', parseInt)
+    .option('--parent-type <type>', 'Parent type (4=space, 5=folder, 6=list, 7=task)', enumIntArg('--parent-type', [4, 5, 6, 7]))
     .option('--visibility <visibility>', 'Visibility (private, workspace)')
     .action(async (opts: { name: string; parentId?: string; parentType?: number; visibility?: string }) => {
       const workspaceId = requireWorkspaceId(program)

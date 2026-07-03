@@ -51,21 +51,22 @@ export function parseApiError(responseBody: unknown, status: number): ClickUpErr
 
 export function mapToExitCode(error: unknown): number {
   if (!(error instanceof ClickUpError)) {
-    return 1
+    return EXIT_CODES.GENERAL_ERROR
   }
 
   switch (error.status) {
+    case 0:
+      return EXIT_CODES.NETWORK_ERROR
     case 401:
-      return 3
+      return EXIT_CODES.AUTH_FAILURE
     case 403:
-      return 5
+      return EXIT_CODES.PERMISSION_DENIED
     case 404:
-      return 4
+      return EXIT_CODES.NOT_FOUND
     case 429:
-      return 6
+      return EXIT_CODES.RATE_LIMITED
     default:
-      if (error.status >= 500) return 1
-      return 1
+      return EXIT_CODES.GENERAL_ERROR
   }
 }
 

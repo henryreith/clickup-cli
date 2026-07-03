@@ -5,6 +5,8 @@ import { formatOutput, type ColumnDef } from '../output.js'
 import { getOutputOptions } from '../cli.js'
 import type { TaskListResponse, TaskSearchResponse, TimeInStatusResponse } from '../types/task.js'
 import { registerSchema } from '../schema.js'
+import { registerTaskBulkCommands } from './task-bulk.js'
+import { intArg, fail, parseIntStrict, parseDateStrict } from '../parse.js'
 
 registerSchema('task', 'list', 'List tasks in a list', [
   { flag: '--list-id', type: 'string', required: true, description: 'List ID' },
@@ -70,19 +72,6 @@ registerSchema('task', 'time-in-status', 'Get time spent in each status for a ta
   { flag: '<task-id>', type: 'string', required: true, description: 'Task ID' },
 ])
 
-registerSchema('task', 'bulk-update', 'Apply the same update to multiple tasks', [
-  { flag: '--task-id', type: 'string[]', required: true, description: 'Task ID (repeatable)' },
-  { flag: '--name', type: 'string', required: false, description: 'New task name' },
-  { flag: '--description', type: 'string', required: false, description: 'New description' },
-  { flag: '--status', type: 'string', required: false, description: 'New status' },
-  { flag: '--priority', type: 'string', required: false, description: 'New priority (1-4 or urgent/high/normal/low)' },
-])
-
-registerSchema('task', 'bulk-delete', 'Delete multiple tasks', [
-  { flag: '--task-id', type: 'string[]', required: true, description: 'Task ID (repeatable)' },
-  { flag: '--confirm', type: 'boolean', required: false, description: 'Skip confirmation prompt' },
-])
-
 const TASK_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 12 },
   { key: 'name', header: 'Name', width: 30 },
@@ -109,7 +98,7 @@ function requireWorkspaceId(program: Command): string | undefined {
   return workspaceId
 }
 
-function collect(value: string, previous: string[]): string[] {
+export function collect(value: string, previous: string[]): string[] {
   return previous.concat([value])
 }
 
@@ -120,34 +109,20 @@ const PRIORITY_MAP: Record<string, number> = {
   low: 4,
 }
 
-function parsePriority(value: string): number {
+export function parsePriority(value: string): number {
   const lower = value.toLowerCase()
   if (PRIORITY_MAP[lower] !== undefined) return PRIORITY_MAP[lower]!
   const num = parseInt(value, 10)
   if (!isNaN(num) && num >= 1 && num <= 4) return num
-  throw new Error('--priority must be 1-4 or urgent/high/normal/low')
+  fail('--priority must be 1-4 or urgent/high/normal/low')
 }
 
-async function runConcurrent<T>(
-  tasks: (() => Promise<T>)[],
-  limit: number,
-): Promise<(T | Error)[]> {
-  const results: (T | Error)[] = new Array(tasks.length)
-  let idx = 0
-
-  async function worker() {
-    while (idx < tasks.length) {
-      const current = idx++
-      try {
-        results[current] = await tasks[current]!()
-      } catch (e) {
-        results[current] = e instanceof Error ? e : new Error(String(e))
-      }
-    }
+function parseCustomFieldFilters(filters: string[]): string {
+  try {
+    return JSON.stringify(filters.map((f) => JSON.parse(f)))
+  } catch {
+    fail('--custom-field filters must be valid JSON')
   }
-
-  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker))
-  return results
 }
 
 function buildTaskListParams(opts: Record<string, unknown>): Record<string, string | string[] | undefined> {
@@ -171,9 +146,7 @@ function buildTaskListParams(opts: Record<string, unknown>): Record<string, stri
   const tags = opts.tag as string[] | undefined
   if (tags?.length) params['tags[]'] = tags
   const customFields = opts.customField as string[] | undefined
-  if (customFields?.length) {
-    for (const cf of customFields) params['custom_fields'] = JSON.stringify(customFields.map(f => JSON.parse(f)))
-  }
+  if (customFields?.length) params['custom_fields'] = parseCustomFieldFilters(customFields)
   return params
 }
 
@@ -190,7 +163,7 @@ export function registerTaskCommands(
     .option('--archived', 'Include archived tasks')
     .option('--include-closed', 'Include tasks in closed status')
     .option('--subtasks', 'Include subtasks in results')
-    .option('--page <n>', 'Page number (0-indexed)', parseInt)
+    .option('--page <n>', 'Page number (0-indexed)', intArg('--page'))
     .option('--status <s>', 'Filter by status (repeatable)', collect, [])
     .option('--assignee <id>', 'Filter by assignee ID (repeatable)', collect, [])
     .option('--tag <name>', 'Filter by tag name (repeatable)', collect, [])
@@ -216,7 +189,7 @@ export function registerTaskCommands(
     .option('--query <text>', 'Full-text search query')
     .option('--include-closed', 'Include tasks in closed status')
     .option('--subtasks', 'Include subtasks')
-    .option('--page <n>', 'Page number (0-indexed)', parseInt)
+    .option('--page <n>', 'Page number (0-indexed)', intArg('--page'))
     .option('--status <s>', 'Filter by status (repeatable)', collect, [])
     .option('--assignee <id>', 'Filter by assignee ID (repeatable)', collect, [])
     .option('--tag <name>', 'Filter by tag name (repeatable)', collect, [])
@@ -264,7 +237,7 @@ export function registerTaskCommands(
       const projectIds = opts.projectId as string[]
       if (projectIds.length) params['project_ids[]'] = projectIds
       const customFields = opts.customField as string[]
-      if (customFields.length) params['custom_fields'] = JSON.stringify(customFields.map(f => JSON.parse(f)))
+      if (customFields.length) params['custom_fields'] = parseCustomFieldFilters(customFields)
       const data = await client.get<TaskSearchResponse>(`/team/${workspaceId}/task`, params)
       formatOutput(data.tasks, TASK_COLUMNS, getOutputOptions(program))
     })
@@ -297,7 +270,7 @@ export function registerTaskCommands(
     .option('--start-date <date>', 'Start date (Unix ms)')
     .option('--assignee <id>', 'Assignee user ID (repeatable)', collect, [])
     .option('--tag <name>', 'Tag name (repeatable)', collect, [])
-    .option('--time-estimate <ms>', 'Time estimate in milliseconds', parseInt)
+    .option('--time-estimate <ms>', 'Time estimate in milliseconds', intArg('--time-estimate'))
     .option('--notify-all', 'Notify all assignees and watchers')
     .option('--parent <task-id>', 'Parent task ID (creates subtask)')
     .option('--links-to <task-id>', 'Link to another task')
@@ -310,10 +283,10 @@ export function registerTaskCommands(
       else if (opts.description !== undefined) body['description'] = opts.description
       if (opts.status !== undefined) body['status'] = opts.status
       if (opts.priority !== undefined) body['priority'] = parsePriority(opts.priority as string)
-      if (opts.dueDate !== undefined) body['due_date'] = parseInt(opts.dueDate, 10)
-      if (opts.startDate !== undefined) body['start_date'] = parseInt(opts.startDate, 10)
+      if (opts.dueDate !== undefined) body['due_date'] = parseDateStrict(opts.dueDate, '--due-date')
+      if (opts.startDate !== undefined) body['start_date'] = parseDateStrict(opts.startDate, '--start-date')
       const assignees = opts.assignee as string[]
-      if (assignees.length) body['assignees'] = assignees.map((a: string) => parseInt(a, 10))
+      if (assignees.length) body['assignees'] = assignees.map((a: string) => parseIntStrict(a, '--assignee'))
       const tags = opts.tag as string[]
       if (tags.length) body['tags'] = tags
       if (opts.timeEstimate !== undefined) body['time_estimate'] = opts.timeEstimate
@@ -324,7 +297,7 @@ export function registerTaskCommands(
       if (customFields.length) {
         body['custom_fields'] = customFields.map((cf: string) => {
           const eqIdx = cf.indexOf('=')
-          if (eqIdx === -1) throw new Error(`Invalid custom field format: ${cf}. Expected: <id>=<value>`)
+          if (eqIdx === -1) fail(`Invalid custom field format: ${cf}. Expected: <id>=<value>`)
           const id = cf.slice(0, eqIdx)
           let value: unknown = cf.slice(eqIdx + 1)
           try { value = JSON.parse(value as string) } catch { /* use as string */ }
@@ -346,7 +319,7 @@ export function registerTaskCommands(
     .option('--priority <n>', 'New priority (1-4 or urgent/high/normal/low)')
     .option('--due-date <date>', 'New due date (Unix ms)')
     .option('--start-date <date>', 'New start date (Unix ms)')
-    .option('--time-estimate <ms>', 'New time estimate in milliseconds', parseInt)
+    .option('--time-estimate <ms>', 'New time estimate in milliseconds', intArg('--time-estimate'))
     .option('--assignee-add <id>', 'Add assignee (repeatable)', collect, [])
     .option('--assignee-remove <id>', 'Remove assignee (repeatable)', collect, [])
     .option('--archived <bool>', 'Archive or unarchive')
@@ -357,15 +330,15 @@ export function registerTaskCommands(
       if (opts.description !== undefined) body['description'] = opts.description
       if (opts.status !== undefined) body['status'] = opts.status
       if (opts.priority !== undefined) body['priority'] = parsePriority(opts.priority as string)
-      if (opts.dueDate !== undefined) body['due_date'] = parseInt(opts.dueDate, 10)
-      if (opts.startDate !== undefined) body['start_date'] = parseInt(opts.startDate, 10)
+      if (opts.dueDate !== undefined) body['due_date'] = parseDateStrict(opts.dueDate, '--due-date')
+      if (opts.startDate !== undefined) body['start_date'] = parseDateStrict(opts.startDate, '--start-date')
       if (opts.timeEstimate !== undefined) body['time_estimate'] = opts.timeEstimate
       const addIds = opts.assigneeAdd as string[]
       const remIds = opts.assigneeRemove as string[]
       if (addIds.length || remIds.length) {
         body['assignees'] = {
-          add: addIds.map((a: string) => parseInt(a, 10)),
-          rem: remIds.map((a: string) => parseInt(a, 10)),
+          add: addIds.map((a: string) => parseIntStrict(a, '--assignee-add')),
+          rem: remIds.map((a: string) => parseIntStrict(a, '--assignee-remove')),
         }
       }
       if (opts.archived !== undefined) body['archived'] = opts.archived === 'true'
@@ -409,117 +382,5 @@ export function registerTaskCommands(
       formatOutput(entries, TIME_IN_STATUS_COLUMNS, getOutputOptions(program))
     })
 
-  task
-    .command('bulk-time-in-status')
-    .description('Get time-in-status for multiple tasks')
-    .requiredOption('--task-id <id>', 'Task ID (repeatable)', collect, [])
-    .action(async (opts) => {
-      const client = getClient()
-      const taskIds = opts.taskId as string[]
-      const results: Record<string, unknown>[] = []
-      for (const id of taskIds) {
-        const data = await client.get<TimeInStatusResponse>(`/task/${id}/time_in_status`)
-        const entries = data.status_history ?? []
-        if (data.current_status) entries.push(data.current_status)
-        results.push({ task_id: id, statuses: entries })
-      }
-      formatOutput(results, [
-        { key: 'task_id', header: 'Task ID', width: 14 },
-        { key: 'statuses', header: 'Statuses', width: 50 },
-      ], getOutputOptions(program))
-    })
-
-  task
-    .command('bulk-update')
-    .description('Apply the same update to multiple tasks')
-    .requiredOption('--task-id <id>', 'Task ID (repeatable)', collect, [])
-    .option('--name <name>', 'New task name')
-    .option('--description <desc>', 'New description')
-    .option('--status <s>', 'New status')
-    .option('--priority <n>', 'New priority (1-4 or urgent/high/normal/low)')
-    .option('--due-date <date>', 'New due date (Unix ms)')
-    .option('--start-date <date>', 'New start date (Unix ms)')
-    .option('--time-estimate <ms>', 'New time estimate in milliseconds', parseInt)
-    .option('--assignee-add <id>', 'Add assignee (repeatable)', collect, [])
-    .option('--assignee-remove <id>', 'Remove assignee (repeatable)', collect, [])
-    .action(async (opts) => {
-      const client = getClient()
-      const taskIds = opts.taskId as string[]
-
-      const body: Record<string, unknown> = {}
-      if (opts.name !== undefined) body['name'] = opts.name
-      if (opts.description !== undefined) body['description'] = opts.description
-      if (opts.status !== undefined) body['status'] = opts.status
-      if (opts.priority !== undefined) body['priority'] = parsePriority(opts.priority as string)
-      if (opts.dueDate !== undefined) body['due_date'] = parseInt(opts.dueDate, 10)
-      if (opts.startDate !== undefined) body['start_date'] = parseInt(opts.startDate, 10)
-      if (opts.timeEstimate !== undefined) body['time_estimate'] = opts.timeEstimate
-      const addIds = opts.assigneeAdd as string[]
-      const remIds = opts.assigneeRemove as string[]
-      if (addIds.length || remIds.length) {
-        body['assignees'] = {
-          add: addIds.map((a: string) => parseInt(a, 10)),
-          rem: remIds.map((a: string) => parseInt(a, 10)),
-        }
-      }
-
-      const tasks = taskIds.map((id) => async () => {
-        const data = await client.put<Record<string, unknown>>(`/task/${id}`, body)
-        return { task_id: id, name: data['name'] as string, result: 'ok' }
-      })
-
-      const results = await runConcurrent(tasks, 3)
-      const rows = results.map((r, i) =>
-        r instanceof Error
-          ? { task_id: taskIds[i], name: '', result: r.message }
-          : r,
-      )
-
-      formatOutput(rows, [
-        { key: 'task_id', header: 'Task ID', width: 14 },
-        { key: 'name', header: 'Name', width: 30 },
-        { key: 'result', header: 'Result', width: 20 },
-      ], getOutputOptions(program))
-    })
-
-  task
-    .command('bulk-delete')
-    .description('Delete multiple tasks')
-    .requiredOption('--task-id <id>', 'Task ID (repeatable)', collect, [])
-    .option('--confirm', 'Skip confirmation prompt')
-    .action(async (opts) => {
-      const client = getClient()
-      const taskIds = opts.taskId as string[]
-
-      if (!opts.confirm) {
-        if (!process.stdin.isTTY) {
-          process.stderr.write('Error: Use --confirm to bulk delete in non-interactive mode.\n')
-          process.exit(2)
-          return
-        }
-        const { confirm } = await import('@inquirer/prompts')
-        const yes = await confirm({ message: `Delete ${taskIds.length} task(s)?` })
-        if (!yes) {
-          process.stdout.write('Cancelled.\n')
-          return
-        }
-      }
-
-      const tasks = taskIds.map((id) => async () => {
-        await client.delete(`/task/${id}`)
-        return { task_id: id, result: 'deleted' }
-      })
-
-      const results = await runConcurrent(tasks, 3)
-      const rows = results.map((r, i) =>
-        r instanceof Error
-          ? { task_id: taskIds[i], result: r.message }
-          : r,
-      )
-
-      formatOutput(rows, [
-        { key: 'task_id', header: 'Task ID', width: 14 },
-        { key: 'result', header: 'Result', width: 20 },
-      ], getOutputOptions(program))
-    })
+  registerTaskBulkCommands(task, program, getClient)
 }

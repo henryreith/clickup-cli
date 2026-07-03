@@ -96,19 +96,28 @@ function applySort(rows: unknown[], sort?: string): unknown[] {
   })
 }
 
+// Strip C0/C1 control characters (except tab) so values from the API cannot
+// inject ANSI escape sequences into the terminal. Newlines become spaces.
+const CONTROL_CHARS_RE = new RegExp('[\\u0000-\\u0008\\u000b-\\u001f\\u007f-\\u009f]', 'g')
+
+function sanitize(str: string): string {
+  return str.replace(/\r?\n/g, ' ').replace(CONTROL_CHARS_RE, '')
+}
+
 function getValue(row: unknown, key: string): string {
   if (row && typeof row === 'object') {
     const record = row as Record<string, unknown>
     const val = record[key]
     if (val === null || val === undefined) return ''
-    if (typeof val === 'object') return JSON.stringify(val)
-    return String(val)
+    if (typeof val === 'object') return sanitize(JSON.stringify(val))
+    return sanitize(String(val))
   }
   return ''
 }
 
 function truncate(str: string, width: number): string {
   if (str.length <= width) return str
+  if (width <= 3) return str.slice(0, Math.max(0, width))
   return str.slice(0, width - 3) + '...'
 }
 
@@ -146,7 +155,11 @@ function printDelimited(rows: unknown[], columns: ColumnDef[], delimiter: string
 
   for (const row of rows) {
     const values = columns.map((col) => {
-      const val = getValue(row, col.key)
+      let val = getValue(row, col.key)
+      // Prevent spreadsheet formula injection when the file is opened in Excel etc.
+      if (delimiter === ',' && /^[=+\-@\t\r]/.test(val)) {
+        val = `'${val}`
+      }
       if (delimiter === ',' && (val.includes(',') || val.includes('"') || val.includes('\n'))) {
         return `"${val.replace(/"/g, '""')}"`
       }

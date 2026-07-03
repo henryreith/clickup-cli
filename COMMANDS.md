@@ -261,7 +261,7 @@ clickup list remove-task <list-id> --task-id <id>
 | `--archived` | Include archived lists |
 | `--name <name>` | List name |
 | `--content <desc>` | List description |
-| `--due-date <ts>` | Due date as Unix timestamp (ms) |
+| `--due-date <ts>` | Due date (Unix ms, ISO 8601, or relative like `+3d`, `tomorrow`) |
 | `--priority <n>` | Priority level: 1 (urgent) to 4 (low) |
 | `--status <s>` | Default status for new tasks |
 | `--unset-status` | Remove the default status from the list |
@@ -465,7 +465,7 @@ clickup task create --list-id <id> --name <name>
 | `--markdown-description <md>` | string | Description as Markdown (overrides `--description`) |
 | `--status <s>` | string | Initial status name |
 | `--priority <1-4>` | int | 1=urgent, 2=high, 3=normal, 4=low |
-| `--due-date <date>` | int (ms) | Due date as Unix timestamp in milliseconds |
+| `--due-date <date>` | date | Due date (Unix ms, ISO 8601, or relative like `+3d`, `tomorrow`) |
 | `--start-date <date>` | int (ms) | Start date as Unix timestamp in milliseconds |
 | `--assignee <id>...` | int[] | One or more user IDs to assign |
 | `--tag <name>...` | string[] | One or more tag names to apply |
@@ -654,7 +654,7 @@ Custom fields are defined at the list level. You can read field definitions, set
 ```
 clickup field list --list-id <id>
 clickup field set --task-id <id> --field-id <fid> --value <value>
-clickup field remove --task-id <id> --field-id <fid>
+clickup field remove --task-id <id> --field-id <fid> [--confirm]
 ```
 
 | Flag | Description |
@@ -689,7 +689,7 @@ clickup field list --list-id 998877
 clickup field set --task-id abc9zt --field-id cf_001 --value "Approved"
 
 # Clear a custom field value
-clickup field remove --task-id abc9zt --field-id cf_001
+clickup field remove --task-id abc9zt --field-id cf_001 --confirm
 ```
 
 ---
@@ -773,7 +773,7 @@ Upload, list, and download task attachments.
 ```
 clickup attachment upload --task-id <id> --file <path> [--filename <name>]
 clickup attachment list --task-id <id>
-clickup attachment download --task-id <id> --attachment-id <id> [--output <path>]
+clickup attachment download --task-id <id> --attachment-id <id> [--output <path>] [--force]
 ```
 
 | Command | Description |
@@ -825,7 +825,7 @@ clickup time update <timer-id> --workspace-id <id>
     [--tag-action <add|remove>]
     [--tag <name>...]
     [--billable <bool>]
-clickup time delete <timer-id> --workspace-id <id>
+clickup time delete <timer-id> --workspace-id <id> [--confirm]
 clickup time history <timer-id> --workspace-id <id>
 clickup time running --workspace-id <id> [--assignee <id>]
 clickup time start --task-id <id> --workspace-id <id> [--description <desc>] [--billable <bool>] [--tag <name>...]
@@ -848,7 +848,7 @@ clickup time rename-tag --workspace-id <id> --name <name> --new-name <name>
 | `--billable <bool>` | bool | Mark the entry as billable |
 | `--tag <name>...` | string[] | One or more time tracking tags |
 
-**Destructive:** `time delete` requires no `--confirm` flag - it deletes immediately.
+**Destructive:** `time delete` and `field remove` follow the standard `--confirm` pattern: prompt in TTY mode, require `--confirm` otherwise.
 
 **Examples**
 

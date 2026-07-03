@@ -25,7 +25,7 @@ clickup time update <timer-id> --workspace-id <id>
     [--description <text>] [--duration <ms>] [--start <ts>]
     [--tag-action <add|remove>] [--tag <name>...] [--billable <bool>]
 
-clickup time delete <timer-id> --workspace-id <id>
+clickup time delete <timer-id> --workspace-id <id> --confirm
 ```
 
 ### Get / History
@@ -77,7 +77,8 @@ clickup time list --workspace-id 9876543 --format md
 
 - Duration is always in **milliseconds** (1 hour = 3600000, 1 minute = 60000)
 - Start timestamps are Unix milliseconds
-- `time delete` does **not** require `--confirm` (unlike most delete commands)
+- `time delete` requires `--confirm` in non-interactive mode (like all delete commands)
+- `--billable` accepts only `true` or `false`; anything else errors (exit 2)
 
 ## Discovery
 

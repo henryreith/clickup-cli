@@ -5,6 +5,7 @@ import { getOutputOptions } from '../cli.js'
 import { resolveWorkspaceId } from '../config.js'
 import { registerSchema } from '../schema.js'
 import type { InviteUserResponse, GetUserResponse } from '../types/user.js'
+import { parseIntStrict } from '../parse.js'
 
 const USER_COLUMNS: ColumnDef[] = [
   { key: 'id', header: 'ID', width: 12 },
@@ -98,7 +99,7 @@ export function registerUserCommands(
       const body: Record<string, unknown> = {}
       if (opts.username !== undefined) body['username'] = opts.username
       if (opts.admin !== undefined) body['admin'] = opts.admin === 'true'
-      if (opts.customRoleId !== undefined) body['custom_role_id'] = parseInt(opts.customRoleId, 10)
+      if (opts.customRoleId !== undefined) body['custom_role_id'] = parseIntStrict(opts.customRoleId, '--custom-role-id')
       await client.put(`/team/${workspaceId}/user/${userId}`, body)
       process.stdout.write(`Updated user ${userId}\n`)
     })

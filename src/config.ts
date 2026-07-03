@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, chmodSync, existsSync } from 'node:fs'
 import Conf from 'conf'
 
 export interface ProfileConfig {
@@ -38,7 +38,7 @@ export const config = new Conf<ConfigSchema>({
   schema: {
     token: { type: 'string' },
     workspace_id: { type: 'string' },
-    output_format: { type: 'string', enum: ['table', 'json', 'csv', 'tsv', 'quiet', 'id'] },
+    output_format: { type: 'string', enum: ['table', 'json', 'csv', 'tsv', 'quiet', 'id', 'md'] },
     color: { type: 'boolean', default: true },
     page_size: { type: 'number', default: 100 },
     timezone: { type: 'string' },
@@ -46,6 +46,17 @@ export const config = new Conf<ConfigSchema>({
     profiles: { type: 'object' },
   },
 })
+
+// The config file stores API tokens; keep it readable by the owner only.
+export function hardenConfigFile(): void {
+  try {
+    if (existsSync(config.path)) chmodSync(config.path, 0o600)
+  } catch {
+    // Best effort; never block CLI usage on permission tightening
+  }
+}
+
+hardenConfigFile()
 
 // Module-level profile override set from --profile global flag
 let _profileOverride: string | undefined
@@ -73,6 +84,7 @@ export function setProfile(key: string, profile: ProfileConfig): void {
   const profiles = getProfiles()
   profiles[key] = profile
   config.set('profiles', profiles)
+  hardenConfigFile()
 }
 
 export function deleteProfile(key: string): void {
@@ -137,12 +149,17 @@ export function resolveToken(flagValue?: string, tokenFilePath?: string): string
   if (flagValue) return flagValue
   // 2. --token-file
   if (tokenFilePath) {
+    let content: string
     try {
-      const content = readFileSync(tokenFilePath, 'utf8').trim()
-      if (content) return content
-    } catch {
-      // fall through
+      content = readFileSync(tokenFilePath, 'utf8').trim()
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error)
+      throw new Error(`Cannot read token file "${tokenFilePath}": ${reason}`)
     }
+    if (!content) {
+      throw new Error(`Token file "${tokenFilePath}" is empty`)
+    }
+    return content
   }
   // 3. CLICKUP_API_TOKEN env
   const envVal = process.env['CLICKUP_API_TOKEN']
@@ -197,14 +214,14 @@ export function resolveColor(flagValue?: boolean): boolean {
 }
 
 export function resolvePageSize(flagValue?: number): number {
-  if (flagValue !== undefined) return flagValue
+  if (flagValue !== undefined && Number.isFinite(flagValue) && flagValue > 0) return Math.floor(flagValue)
   const envVal = process.env['CLICKUP_PAGE_SIZE']
   if (envVal !== undefined) {
     const num = parseInt(envVal, 10)
-    if (!isNaN(num)) return num
+    if (!isNaN(num) && num > 0) return num
   }
   const stored = config.get('page_size')
-  if (typeof stored === 'number') return stored
+  if (typeof stored === 'number' && stored > 0) return stored
   return 100
 }
 

@@ -36,11 +36,21 @@ export function registerConfigCommands(program: Command, getClient: () => ClickU
           return
         }
         config.set(key, num)
+      } else if (key === 'output_format') {
+        const valid = ['table', 'json', 'csv', 'tsv', 'quiet', 'id', 'md']
+        if (!valid.includes(value)) {
+          process.stderr.write(`Error: output_format must be one of: ${valid.join(', ')}\n`)
+          process.exit(2)
+          return
+        }
+        config.set(key, value)
       } else {
         config.set(key, value)
       }
 
-      process.stdout.write(`Set ${key} = ${value}\n`)
+      // Never echo secrets back to the terminal
+      const shown = key === 'token' ? `${value.slice(0, 8)}...` : value
+      process.stdout.write(`Set ${key} = ${shown}\n`)
     })
 
   configCmd
@@ -72,7 +82,8 @@ export function registerConfigCommands(program: Command, getClient: () => ClickU
       for (const key of keys) {
         const value = store[key]
         if (value !== undefined) {
-          process.stdout.write(`${key} = ${value}\n`)
+          const shown = key === 'token' ? `${String(value).slice(0, 8)}...` : value
+          process.stdout.write(`${key} = ${shown}\n`)
         }
       }
     })

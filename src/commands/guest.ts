@@ -31,6 +31,16 @@ function parseBool(val: string | undefined): boolean | undefined {
   return val === 'true'
 }
 
+const PERMISSION_LEVELS = ['read', 'comment', 'edit', 'create'] as const
+
+function requirePermission(level: string): string {
+  if (!(PERMISSION_LEVELS as readonly string[]).includes(level)) {
+    process.stderr.write(`Error: --permission must be one of: ${PERMISSION_LEVELS.join(', ')}\n`)
+    process.exit(2)
+  }
+  return level
+}
+
 // Schema registrations
 registerSchema('guest', 'invite', 'Invite a guest to a workspace', [
   { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
@@ -191,7 +201,7 @@ export function registerGuestCommands(
     .requiredOption('--permission <level>', 'Permission level (read, comment, edit, create)')
     .action(async (guestId: string, opts: { taskId: string; permission: string }) => {
       const client = getClient()
-      await client.post(`/task/${opts.taskId}/guest/${guestId}`, { permission_level: opts.permission })
+      await client.post(`/task/${opts.taskId}/guest/${guestId}`, { permission_level: requirePermission(opts.permission) })
       process.stdout.write(`Added guest ${guestId} to task ${opts.taskId}\n`)
     })
 
@@ -214,7 +224,7 @@ export function registerGuestCommands(
     .requiredOption('--permission <level>', 'Permission level (read, comment, edit, create)')
     .action(async (guestId: string, opts: { listId: string; permission: string }) => {
       const client = getClient()
-      await client.post(`/list/${opts.listId}/guest/${guestId}`, { permission_level: opts.permission })
+      await client.post(`/list/${opts.listId}/guest/${guestId}`, { permission_level: requirePermission(opts.permission) })
       process.stdout.write(`Added guest ${guestId} to list ${opts.listId}\n`)
     })
 
@@ -237,7 +247,7 @@ export function registerGuestCommands(
     .requiredOption('--permission <level>', 'Permission level (read, comment, edit, create)')
     .action(async (guestId: string, opts: { folderId: string; permission: string }) => {
       const client = getClient()
-      await client.post(`/folder/${opts.folderId}/guest/${guestId}`, { permission_level: opts.permission })
+      await client.post(`/folder/${opts.folderId}/guest/${guestId}`, { permission_level: requirePermission(opts.permission) })
       process.stdout.write(`Added guest ${guestId} to folder ${opts.folderId}\n`)
     })
 

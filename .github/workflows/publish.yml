@@ -36,5 +36,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Smoke test CLI binary
+        run: |
+          BIN="$(node -p "require('./package.json').bin.clickup")"
+          test -f "$BIN"
+          node "$BIN" --version
+
       - name: Publish
         run: npm publish --provenance --access public
