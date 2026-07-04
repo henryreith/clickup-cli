@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[period and scope - e.g. 'last sprint for the mobile space', 'June, customer-facing']"
-allowed-tools: Bash(clickup *), Write
+allowed-tools: Bash(clickup *), Write, Read
 ---
 
 # Release Notes
@@ -39,18 +39,7 @@ Group by tags and task names into: **Features**, **Improvements**, **Fixes**, an
 
 Rewrite task names for the audience - "Fix login redirect on Safari" becomes "Fixed an issue where Safari users could be redirected to the wrong page after logging in." Never paste raw task IDs into customer-facing notes.
 
-```markdown
-# Release Notes - <period>
-
-## New
-- ...
-
-## Improved
-- ...
-
-## Fixed
-- ...
-```
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-release-notes` prints it). Fill every placeholder; drop sections with no content.
 
 For internal notes append task IDs and assignees for traceability.
 

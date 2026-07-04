@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[workspace-id]"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Read
 ---
 
 # Blocker Report
@@ -70,6 +70,8 @@ clickup task bulk-time-in-status --task-id <id1> --task-id <id2> --format json
 ```
 
 ### Step 6: Compile the report
+
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-blocker-report` prints it). Fill every placeholder; drop sections with no content.
 
 - **Blocked tasks**: What, who, and what is blocking them
 - **Stale tasks**: In progress but not updated recently

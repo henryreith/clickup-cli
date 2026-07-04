@@ -143,6 +143,9 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 - Recipe skills: set `disable-model-invocation: true`, `context: fork`, `agent: general-purpose`, `allowed-tools: Bash(clickup *)`
 - Recipe skills should accept `$ARGUMENTS` for parameterized invocation
 - All skills carry `license: MIT` in frontmatter
+- Report-producing recipes keep their output format in `assets/report-template.md` (agents copy the structure); bodies point to it instead of embedding long format blocks
+- Deterministic computation (sums, classification) lives in `scripts/*.mjs` (zero-dep node, JSON on stdin); recipes pipe CLI output through them instead of doing arithmetic in-model
+- A skill that references `assets/`/`references/` needs `Read` in allowed-tools; one that references `scripts/` needs `Bash(node *)`
 - `scripts/lint-skills.mjs` enforces these conventions (frontmatter, line limits, allowed-tools validity against the built CLI, root index completeness); it runs in CI and must pass before release
 
 ### Keeping Skills and Plugin Files in Sync

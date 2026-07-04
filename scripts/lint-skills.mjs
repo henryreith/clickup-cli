@@ -101,6 +101,29 @@ for (const dir of dirs) {
   if (fm['allowed-tools']) checkAllowedTools(dir, fm['allowed-tools'])
 
   if (content.includes('—')) fail(dir, 'contains an em dash (repo convention: no em dashes)')
+
+  // Bundled files: every references/assets/scripts path mentioned must exist,
+  // every bundled file must be mentioned, and permissions must allow using them.
+  const mentioned = [...content.matchAll(/(?:references|assets|scripts)\/[\w./-]+\.\w+/g)].map((m) => m[0])
+  for (const rel of new Set(mentioned)) {
+    if (!existsSync(join(skillsDir, dir, rel))) fail(dir, `mentions bundled file that does not exist: ${rel}`)
+  }
+  for (const sub of ['references', 'assets', 'scripts']) {
+    const subDir = join(skillsDir, dir, sub)
+    if (!existsSync(subDir)) continue
+    for (const f of readdirSync(subDir)) {
+      if (!content.includes(`${sub}/${f}`)) fail(dir, `bundled file not mentioned in SKILL.md (orphan): ${sub}/${f}`)
+    }
+  }
+  const tools = fm['allowed-tools'] ?? ''
+  if (tools) {
+    if (mentioned.some((m) => m.startsWith('assets/') || m.startsWith('references/')) && !/\bRead\b/.test(tools)) {
+      fail(dir, 'references bundled assets/references but allowed-tools lacks Read')
+    }
+    if (mentioned.some((m) => m.startsWith('scripts/')) && !tools.includes('Bash(node')) {
+      fail(dir, 'references bundled scripts but allowed-tools lacks Bash(node *)')
+    }
+  }
 }
 
 // The root skill's index table must mention every skill directory

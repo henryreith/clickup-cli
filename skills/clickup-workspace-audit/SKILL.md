@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[scope - workspace, space name, or list name; optionally 'and fix']"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Bash(node *), Read
 ---
 
 # Workspace Audit
@@ -27,9 +27,17 @@ clickup task search --workspace-id <id> --format json
 
 Server-side filters cannot express "no assignee" or "no due date", so fetch active tasks and inspect the JSON client-side. For large workspaces sweep one space at a time (`--space-id`).
 
-### Step 2: Detect problems
+### Step 2: Classify deterministically
 
-Classify each task into any of:
+Pipe the tasks through the bundled script so every task is bucketed by rule, not judgment:
+
+```bash
+SKILL_DIR=$(clickup skill path clickup-workspace-audit)
+clickup task search --workspace-id <id> --format json \
+    | node "$SKILL_DIR/scripts/classify.mjs" [--stale-days 14]
+```
+
+The output contains `activeTasks`, `flaggedTasks`, per-bucket lists, and per-person `load`. The buckets:
 
 | Check | Condition |
 |-------|-----------|
@@ -45,23 +53,7 @@ Tasks with `blocked` or `waiting` status whose blockers are themselves overdue d
 
 ### Step 4: Report
 
-```
-## Workspace Audit: <scope> (<date>)
-
-Overall: N active tasks, M flagged (X%)
-
-### Overdue (worst first)
-- <task> - due <date>, assignee <name> (<id>)
-
-### Unassigned / No due date / Stale
-- ...
-
-### Load
-- <name>: N open tasks (team median: M)
-
-### Recommended fixes
-1. ...
-```
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-workspace-audit` prints it). Fill every placeholder; drop sections with no content.
 
 ### Step 5: Apply fixes (only when asked)
 

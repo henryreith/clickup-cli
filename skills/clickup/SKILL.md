@@ -37,6 +37,8 @@ clickup skill show <name>              # Print a skill's full contents (e.g. cli
 
 Known pitfalls (rate limits, error codes, exit codes, destructive-command rules) live in `references/gotchas.md` next to this file; read it before debugging a failing command (`clickup skill path clickup` prints this skill's directory).
 
+Skills bundle supporting files per the Agent Skills standard: `references/` (deep detail), `assets/` (output templates to copy), and `scripts/` (deterministic helpers to run with node). `clickup skill path <name>` prints any skill's directory so these files can be read or executed directly.
+
 ## Sub-Skills (load when needed)
 
 | Skill | What it covers |

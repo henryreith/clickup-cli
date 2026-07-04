@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[workspace-id] [start-date] [end-date]"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Read
 ---
 
 # Time Audit
@@ -80,6 +80,10 @@ Look for:
 # Check for currently running timers
 clickup time running --workspace-id <id> --format json
 ```
+
+### Compile the report
+
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-time-audit` prints it). Fill every placeholder; drop sections with no content.
 
 ## Tips
 

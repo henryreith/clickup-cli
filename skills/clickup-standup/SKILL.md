@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[scope - e.g. 'my tasks', 'engineering team', user-id]"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Read
 ---
 
 # Daily Standup
@@ -74,19 +74,7 @@ clickup time running --workspace-id <id> --assignee <user-id> --format json
 
 ### Step 6: Compile standup
 
-Format as:
-
-```
-**Yesterday:**
-- Completed: [list of finished tasks with names]
-
-**Today:**
-- Working on: [list of in-progress tasks]
-- Due today: [list of tasks due today]
-
-**Blockers:**
-- [list of blocked tasks, if any]
-```
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-standup` prints it). Fill every placeholder; drop sections with no content.
 
 ## Tips
 

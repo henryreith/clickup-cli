@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[scope - e.g. 'marketing team', space-id, or workspace-id]"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Read
 ---
 
 # Weekly Review
@@ -81,6 +81,8 @@ clickup goal list --workspace-id <id> --format json
 ```
 
 ### Step 7: Compile the report
+
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-weekly-review` prints it). Fill every placeholder; drop sections with no content.
 
 Summarize the data into a clear report with sections:
 - **Completed this week**: Count and highlights of finished tasks

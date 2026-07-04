@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[period and scope - e.g. 'last week', 'June for Sarah', 'this month billable only']"
-allowed-tools: Bash(clickup *), Write
+allowed-tools: Bash(clickup *), Bash(node *), Write, Read
 ---
 
 # Timesheet Export
@@ -29,38 +29,37 @@ clickup time list --workspace-id <id> \
 
 `--start`/`--end` accept ISO dates (`2026-06-01`), relative forms (`-30d`), or Unix timestamps. Entry durations are milliseconds.
 
-### Step 2: Aggregate
+### Step 2: Aggregate deterministically
 
-Compute from the JSON:
+Never sum hours yourself. Pipe the entries through the bundled script; the math comes out exact:
 
-- Hours per person per day (duration ms / 3,600,000, round to 2 decimals)
-- Hours per task (join `task.id` to task names from the entries)
-- Billable vs non-billable split (the `billable` field)
-- Grand totals
+```bash
+SKILL_DIR=$(clickup skill path clickup-timesheet-export)
+
+# JSON summary: totals, byPerson, byTask, flagged entries
+clickup time list --workspace-id <id> --start <start> --end <end> --format json \
+    | node "$SKILL_DIR/scripts/aggregate.mjs"
+
+# CSV rows for the export file
+clickup time list --workspace-id <id> --start <start> --end <end> --format json \
+    | node "$SKILL_DIR/scripts/aggregate.mjs" --csv
+```
+
+The summary's `flags` field lists running timers (excluded from totals), entries with no task, and entries over 12h.
 
 ### Step 3: Write the export
 
 CSV for spreadsheets (default when the user says export/invoice):
 
-```csv
-date,person,task,description,hours,billable
-2026-06-30,Sarah,Login bug fix,Safari redirect,2.50,true
-```
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-timesheet-export` prints it). Fill every placeholder; drop sections with no content.
 
 Save with the Write tool as `timesheet-<start>-<end>.csv` and tell the user the path. For a chat answer, use a markdown table plus totals instead.
 
 ### Step 4: Summarize
 
-```
-Timesheet <start> to <end>
-- Total: N hours (M billable / K non-billable)
-- By person: Sarah 32.5h, Tom 28.0h, ...
-- Top tasks: <task> 12.5h, ...
-Flagged: entries with no task attached, running timers still open
-```
+Use the summary block from the same template.
 
 ## Tips
 
-- Entries with a null `end` are running timers; exclude them from totals and flag them.
 - Cross-check suspicious days (over 12h per person) rather than silently exporting them.
 - For a recurring client invoice, filter to the client's space via the task IDs' locations.

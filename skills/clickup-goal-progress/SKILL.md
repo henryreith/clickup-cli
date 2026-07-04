@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[workspace-id]"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Read
 ---
 
 # Goal Progress Report
@@ -55,6 +55,8 @@ clickup task list --list-id <linked-list-id> --include-closed --format json
 ```
 
 ### Step 5: Compile the report
+
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-goal-progress` prints it). Fill every placeholder; drop sections with no content.
 
 For each goal:
 - **Goal name** and due date

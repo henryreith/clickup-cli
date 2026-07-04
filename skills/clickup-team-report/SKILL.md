@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[team or department name, e.g. 'marketing', 'engineering', 'operations']"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Read
 ---
 
 # Team / Department Report
@@ -101,6 +101,8 @@ clickup time list --workspace-id <id> \
 Filter time entries to those related to the team's tasks.
 
 ### Step 7: Compile the report
+
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-team-report` prints it). Fill every placeholder; drop sections with no content.
 
 Structure the report as:
 

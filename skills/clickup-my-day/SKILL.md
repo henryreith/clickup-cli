@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[optional: a different person, or 'this week' for a wider window]"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Read
 ---
 
 # My Day
@@ -45,19 +45,7 @@ Priority (urgent=1 to low=4) breaks ties inside each bucket.
 
 ### Step 4: Present the agenda
 
-```
-## Your day - <date>
-
-Now: <running timer task, if any>
-
-1. [OVERDUE] <task> - was due <date> (<list>)
-2. [TODAY] <task> - <priority>
-3. ...
-
-Blocked (not actionable): <task> - waiting on <dependency>
-
-Suggestion: <one sentence - e.g. "Clear the two overdue items before starting new work.">
-```
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-my-day` prints it). Fill every placeholder; drop sections with no content.
 
 Keep it under ~10 items; summarize the rest as "and N more in the backlog".
 

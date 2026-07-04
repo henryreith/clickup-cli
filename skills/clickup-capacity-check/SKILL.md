@@ -6,7 +6,7 @@ disable-model-invocation: true
 context: fork
 agent: general-purpose
 argument-hint: "[workspace-id]"
-allowed-tools: Bash(clickup *)
+allowed-tools: Bash(clickup *), Read
 ---
 
 # Capacity Check
@@ -56,6 +56,8 @@ clickup task search --workspace-id <id> --assignee <user-id> \
 ```
 
 ### Step 5: Compile capacity report
+
+Copy the exact structure from `assets/report-template.md` in this skill's directory (`clickup skill path clickup-capacity-check` prints it). Fill every placeholder; drop sections with no content.
 
 For each team member:
 - **Active tasks**: Count and total estimated hours
