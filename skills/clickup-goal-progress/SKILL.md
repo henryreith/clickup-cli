@@ -1,6 +1,7 @@
 ---
 name: clickup-goal-progress
 description: Reports on goal and OKR completion status by tracking key results, identifying at-risk goals, and updating progress. Use when the user asks about goal progress, OKR status, quarterly objectives, or wants to check if targets are on track.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose
@@ -11,6 +12,8 @@ allowed-tools: Bash(clickup *)
 # Goal Progress Report
 
 Track OKR/goal completion, update key results, and identify goals that are at risk.
+
+Interpret `$ARGUMENTS` as the scope (workspace, space, list, person, or time period as the sections below expect); when it is empty, ask or fall back to the configured workspace.
 
 ## Prerequisites
 

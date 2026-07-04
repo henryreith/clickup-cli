@@ -1,6 +1,7 @@
 ---
 name: clickup-custom-report
 description: Generates a custom ClickUp report based on any criteria the user describes. Handles ad-hoc queries like "show me all high-priority tasks assigned to John", "what's overdue in the backend", or "tasks created this month with no assignee". Use when the user asks for a specific data pull, custom query, filtered view, or any report that does not match a predefined recipe.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose

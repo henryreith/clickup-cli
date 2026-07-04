@@ -40,3 +40,6 @@ jobs:
           BIN="$(node -p "require('./package.json').bin.clickup")"
           test -f "$BIN"
           node "$BIN" --version
+
+      - name: Lint skills
+        run: npm run lint:skills

@@ -1,6 +1,7 @@
 ---
 name: clickup-project-setup
 description: Scaffolds a new project in ClickUp by creating a space, folders, lists, tags, and initial tasks. Use when the user wants to set up a new project, create a project structure, or bootstrap a workspace for a new initiative.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose
@@ -11,6 +12,8 @@ allowed-tools: Bash(clickup *)
 # Project Setup
 
 Create a complete project structure in ClickUp from scratch.
+
+Interpret `$ARGUMENTS` as the scope (workspace, space, list, person, or time period as the sections below expect); when it is empty, ask or fall back to the configured workspace.
 
 ## Prerequisites
 

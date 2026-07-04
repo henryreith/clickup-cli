@@ -1,6 +1,7 @@
 ---
 name: clickup-users
 description: Manages ClickUp workspace users, groups, guests, roles, and members. Use when the user asks about team members, wants to invite users, manage groups, grant guest access, check permissions, resolve names to IDs, or see who is assigned to what.
+license: MIT
 allowed-tools: Bash(clickup user *), Bash(clickup group *), Bash(clickup guest *), Bash(clickup role *), Bash(clickup member *), Bash(clickup workspace members), Bash(clickup schema user*), Bash(clickup schema group*), Bash(clickup schema guest*), Bash(clickup schema member*)
 ---
 

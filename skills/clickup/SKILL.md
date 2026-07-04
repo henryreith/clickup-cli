@@ -1,6 +1,7 @@
 ---
 name: clickup
 description: Manages ClickUp projects, tasks, spaces, lists, time tracking, goals, and more via CLI. Use when the user needs to create tasks, check project status, manage sprints, track time, find work items, or interact with ClickUp data in any way.
+license: MIT
 user-invocable: false
 ---
 
@@ -34,6 +35,8 @@ clickup skill list                     # All available skills
 clickup skill show <name>              # Print a skill's full contents (e.g. clickup-tasks)
 ```
 
+Known pitfalls (rate limits, error codes, exit codes, destructive-command rules) live in `references/gotchas.md` next to this file; read it before debugging a failing command (`clickup skill path clickup` prints this skill's directory).
+
 ## Sub-Skills (load when needed)
 
 | Skill | What it covers |
@@ -49,6 +52,7 @@ clickup skill show <name>              # Print a skill's full contents (e.g. cli
 | `clickup-webhooks` | Webhook registration and management |
 | `clickup-fields` | Custom fields, tags, custom task types |
 | `clickup-templates` | Templates: list available templates, apply task/list/folder templates |
+| `clickup-docs` | Docs and pages: create docs, write markdown pages, search the doc library |
 
 ## Recipe Skills (multi-step workflows)
 
@@ -69,6 +73,11 @@ Recipes accept natural language arguments. Scope them to any team, department, p
 | `clickup-capacity-check` | Check team workload and availability |
 | `clickup-blocker-report` | Find blocked tasks and dependency chains |
 | `clickup-goal-progress` | Report on goal/OKR completion |
+| `clickup-meeting-notes-to-tasks` | Turn meeting notes or transcripts into triaged tasks |
+| `clickup-workspace-audit` | Hygiene sweep: unassigned, overdue, stale, overloaded |
+| `clickup-timesheet-export` | Export time entries as a timesheet with totals |
+| `clickup-release-notes` | Changelog from completed tasks for a period |
+| `clickup-my-day` | Personal daily agenda ordered by what to tackle first |
 
 ## Quick Patterns
 

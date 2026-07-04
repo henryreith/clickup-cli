@@ -1,6 +1,7 @@
 ---
 name: clickup-sprint-planning
 description: Plans a sprint by selecting tasks from backlog, assigning them, setting dates, and organizing into a sprint list. Use when the user wants to plan a sprint, set up an iteration, or pull work from backlog into a sprint.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose
@@ -11,6 +12,8 @@ allowed-tools: Bash(clickup *)
 # Sprint Planning
 
 Set up a new sprint by pulling tasks from the backlog, estimating, assigning, and organizing.
+
+Interpret `$ARGUMENTS` as the scope (workspace, space, list, person, or time period as the sections below expect); when it is empty, ask or fall back to the configured workspace.
 
 ## Prerequisites
 

@@ -20,10 +20,11 @@ A standalone, open-source CLI covering the entire ClickUp API v2 surface. Not ti
 ## Commands
 
 ```bash
-npm run dev        # run via tsx during development
-npm run build      # bundle with tsup
-npm test           # vitest
-npm run typecheck  # tsc --noEmit
+npm run dev         # run via tsx during development
+npm run build       # bundle with tsup
+npm test            # vitest
+npm run typecheck   # tsc --noEmit
+npm run lint:skills # validate skills/ conventions (requires a build; also runs in CI)
 ```
 
 ## Code Conventions
@@ -141,6 +142,8 @@ export function registerResourceCommands(program: Command, client: ClickUpClient
 - Sub-skills: add `allowed-tools` scoped to relevant `clickup` subcommands
 - Recipe skills: set `disable-model-invocation: true`, `context: fork`, `agent: general-purpose`, `allowed-tools: Bash(clickup *)`
 - Recipe skills should accept `$ARGUMENTS` for parameterized invocation
+- All skills carry `license: MIT` in frontmatter
+- `scripts/lint-skills.mjs` enforces these conventions (frontmatter, line limits, allowed-tools validity against the built CLI, root index completeness); it runs in CI and must pass before release
 
 ### Keeping Skills and Plugin Files in Sync
 Whenever a new command is added, an existing command changes behavior, or any user-facing functionality is modified:

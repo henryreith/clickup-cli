@@ -1,6 +1,7 @@
 ---
 name: clickup-capacity-check
 description: Checks team workload and capacity by analyzing who is overloaded, who has bandwidth, and suggesting rebalancing. Use when the user asks about team capacity, workload, who is overloaded, or wants to balance task assignments.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose
@@ -11,6 +12,8 @@ allowed-tools: Bash(clickup *)
 # Capacity Check
 
 Assess team workload by analyzing task assignments, time estimates, and time logged.
+
+Interpret `$ARGUMENTS` as the scope (workspace, space, list, person, or time period as the sections below expect); when it is empty, ask or fall back to the configured workspace.
 
 ## Prerequisites
 

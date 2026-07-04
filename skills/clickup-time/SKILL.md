@@ -1,6 +1,7 @@
 ---
 name: clickup-time
 description: Tracks time in ClickUp including logging entries, managing running timers, tagging time, and querying reports. Use when the user asks about time tracking, wants to start or stop a timer, log hours, check who is working on what, or audit time entries.
+license: MIT
 allowed-tools: Bash(clickup time *), Bash(clickup schema time*)
 ---
 

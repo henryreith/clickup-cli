@@ -1,6 +1,7 @@
 ---
 name: clickup-chat
 description: Lists ClickUp chat channels and sends messages. Use when the user wants to post a notification, send a standup summary, notify a channel, or check what chat channels exist in the workspace.
+license: MIT
 allowed-tools: Bash(clickup chat *), Bash(clickup schema chat*)
 ---
 

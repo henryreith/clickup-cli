@@ -19,7 +19,8 @@
     "dev": "tsx bin/clickup.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "version": "node scripts/sync-version.js"
+    "version": "node scripts/sync-version.js",
+    "lint:skills": "node scripts/lint-skills.mjs"
   },
   "keywords": [
     "clickup",

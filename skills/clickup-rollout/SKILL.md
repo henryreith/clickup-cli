@@ -1,6 +1,7 @@
 ---
 name: clickup-rollout
 description: Rolls out a saved process template in ClickUp by applying it to a target location, then configuring assignees, due dates, and custom fields. Use when the user says "start a new [project/process/sprint/onboarding]" or wants to kick off a repeatable workflow from a template.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose
@@ -11,6 +12,8 @@ allowed-tools: Bash(clickup *)
 # Template Rollout
 
 Apply a saved ClickUp template and configure the resulting task, list, or folder for a new instance of the process.
+
+Interpret `$ARGUMENTS` as the scope (workspace, space, list, person, or time period as the sections below expect); when it is empty, ask or fall back to the configured workspace.
 
 ## Workflow
 

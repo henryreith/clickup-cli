@@ -1,6 +1,7 @@
 ---
 name: clickup-standup
 description: Generates a daily standup summary from ClickUp covering what was done yesterday, what is planned today, and blockers. Use when the user asks for a standup report, daily update, or wants to know what they or their team worked on.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose

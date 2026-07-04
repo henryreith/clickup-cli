@@ -1,6 +1,7 @@
 ---
 name: clickup-time-audit
 description: Audits time tracking entries by checking utilization, finding missing entries, and comparing logged vs. estimated time. Use when the user wants to audit time, check billable hours, find unlogged work, or review team utilization.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose
@@ -11,6 +12,8 @@ allowed-tools: Bash(clickup *)
 # Time Audit
 
 Audit time tracking data for accuracy, utilization, and completeness.
+
+Interpret `$ARGUMENTS` as the scope (workspace, space, list, person, or time period as the sections below expect); when it is empty, ask or fall back to the configured workspace.
 
 ## Prerequisites
 

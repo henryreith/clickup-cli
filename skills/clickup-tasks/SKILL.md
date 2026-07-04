@@ -1,6 +1,7 @@
 ---
 name: clickup-tasks
 description: Creates, updates, searches, and manages ClickUp tasks, subtasks, checklists, dependencies, and attachments. Use when the user asks about tasks, wants to create or find work items, manage subtasks, add checklists, set dependencies, or upload files to tasks.
+license: MIT
 allowed-tools: Bash(clickup task *), Bash(clickup checklist *), Bash(clickup dependency *), Bash(clickup relation *), Bash(clickup attachment *), Bash(clickup schema task*), Bash(clickup schema checklist*)
 ---
 

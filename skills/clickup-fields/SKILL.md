@@ -1,7 +1,8 @@
 ---
 name: clickup-fields
 description: Manages ClickUp custom fields, tags, and custom task types. Use when the user asks about custom fields, wants to set field values on tasks, manage tags, or work with custom task types.
-allowed-tools: Bash(clickup custom-field *), Bash(clickup tag *), Bash(clickup custom-task-type *), Bash(clickup attachment *), Bash(clickup schema field*), Bash(clickup schema tag*)
+license: MIT
+allowed-tools: Bash(clickup field *), Bash(clickup tag *), Bash(clickup task-type *), Bash(clickup attachment *), Bash(clickup schema field*), Bash(clickup schema tag*)
 ---
 
 # ClickUp Custom Fields, Tags, and Task Types

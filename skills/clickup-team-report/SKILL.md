@@ -1,6 +1,7 @@
 ---
 name: clickup-team-report
 description: Generates a status report for any team, department, or area of the business in ClickUp. Covers task progress, workload distribution, upcoming deadlines, and highlights. Use when the user asks for a department rundown, team status, what marketing is doing, operations update, or any team/department-specific report.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose

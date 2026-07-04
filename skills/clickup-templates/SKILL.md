@@ -1,6 +1,7 @@
 ---
 name: clickup-templates
 description: Lists and applies ClickUp templates to create tasks, lists, and folders from saved process templates. Use when the user wants to roll out a repeatable process, create items from a template, or find what templates are available in the workspace.
+license: MIT
 allowed-tools: Bash(clickup template *), Bash(clickup schema template*)
 ---
 

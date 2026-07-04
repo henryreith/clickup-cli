@@ -1,6 +1,7 @@
 ---
 name: clickup-weekly-review
 description: Generates a weekly progress report from ClickUp, scoped to any team, department, space, or workspace. Summarizes completed tasks, in-progress work, blockers, and time logged. Use when the user asks for a weekly update, progress report, team summary, department rundown, or wants to know what happened this week.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose

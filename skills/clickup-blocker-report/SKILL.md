@@ -1,6 +1,7 @@
 ---
 name: clickup-blocker-report
 description: Finds blocked tasks, dependency chains, and stale items that need attention. Use when the user asks about blockers, stuck tasks, stalled work, dependency issues, or wants to find what is holding up progress.
+license: MIT
 disable-model-invocation: true
 context: fork
 agent: general-purpose
@@ -11,6 +12,8 @@ allowed-tools: Bash(clickup *)
 # Blocker Report
 
 Identify blocked tasks, broken dependency chains, and items that have been stalled.
+
+Interpret `$ARGUMENTS` as the scope (workspace, space, list, person, or time period as the sections below expect); when it is empty, ask or fall back to the configured workspace.
 
 ## Prerequisites
 
