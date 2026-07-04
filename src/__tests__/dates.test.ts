@@ -59,6 +59,29 @@ describe('parseDate', () => {
     expect(now - result).toBe(30 * 60 * 1000)
   })
 
+  it('parses unsigned relative 3d as +3d', () => {
+    expect(parseDate('3d')).toBe(parseDate('+3d'))
+  })
+
+  it('parses Unix seconds (10 digits) as ms', () => {
+    expect(parseDate('1742169600')).toBe(1742169600000)
+  })
+
+  it('parses bare weekday as next occurrence', () => {
+    expect(parseDate('friday')).toBe(parseDate('next friday'))
+    const result = new Date(parseDate('friday'))
+    expect(result.getDay()).toBe(5)
+    expect(result.getTime()).toBeGreaterThan(Date.now())
+  })
+
+  it('parses bare weekday matching today as next week', () => {
+    // System time is a Tuesday
+    const result = new Date(parseDate('tuesday'))
+    expect(result.getDay()).toBe(2)
+    const daysAhead = Math.round((result.getTime() - parseDate('today')) / (24 * 60 * 60 * 1000))
+    expect(daysAhead).toBe(7)
+  })
+
   it('parses "next monday"', () => {
     const result = parseDate('next monday')
     const d = new Date(result)

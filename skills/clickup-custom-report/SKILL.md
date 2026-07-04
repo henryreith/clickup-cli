@@ -120,6 +120,6 @@ These all work with this recipe:
 ## Tips
 
 - Combine multiple searches if a single query can't capture everything
-- Use `clickup schema tasks.search` to discover available filter flags
+- Use `clickup schema task.search` to discover available filter flags
 - For complex comparisons, run separate searches and merge the results
 - If the user asks for something the CLI can't filter directly, fetch a broader set and filter in post-processing

@@ -656,7 +656,7 @@ The CLI ships with a hierarchical skills system that enables AI agents to use Cl
 **How an agent uses the skills:**
 
 1. The root skill (`skills/clickup/SKILL.md`) lives in the agent's system prompt or is loaded at session start. It lists available sub-skills and recipes.
-2. When the agent needs to perform an action (e.g., create a task), it reads the relevant sub-skill (`skills/clickup-tasks/SKILL.md`) or runs `clickup schema tasks.create` for just-in-time field detail.
+2. When the agent needs to perform an action (e.g., create a task), it reads the relevant sub-skill (`skills/clickup-tasks/SKILL.md`) or runs `clickup schema task.create` for just-in-time field detail.
 3. For complex workflows (e.g., sprint planning), the agent reads a recipe skill that orchestrates multiple commands in sequence.
 4. The agent never needs the full API spec in context. Total token cost per action: the root skill (~150 tokens) + one sub-skill (~300 tokens) = ~450 tokens vs. thousands for a full tool schema.
 
@@ -712,7 +712,7 @@ allowed-tools: Bash(clickup task *), Bash(clickup checklist *), Bash(clickup dep
 [Recipes and examples specific to this resource]
 
 ## Discovery
-[How to get more detail: `clickup schema tasks.create`, `clickup task --help`]
+[How to get more detail: `clickup schema task.create`, `clickup task --help`]
 ```
 
 **Dynamic substitutions:**
@@ -797,13 +797,13 @@ The `clickup schema` command provides runtime introspection so agents can discov
 
 ```
 clickup schema                           # List all resources and actions
-clickup schema tasks                     # List all task actions (list, get, create, update, delete, ...)
-clickup schema tasks.create              # Show fields for task creation
-clickup schema tasks.list                # Show available filter flags for task listing
-clickup schema tasks.create --format json  # Machine-readable field definitions
+clickup schema task                     # List all task actions (list, get, create, update, delete, ...)
+clickup schema task.create              # Show fields for task creation
+clickup schema task.list                # Show available filter flags for task listing
+clickup schema task.create --format json  # Machine-readable field definitions
 ```
 
-**Schema output for `clickup schema tasks.create`:**
+**Schema output for `clickup schema task.create`:**
 
 ```
 Tasks > Create
@@ -1357,9 +1357,9 @@ clickup schema <resource>.<action> --format json  # Machine-readable field defin
 Examples:
 ```
 clickup schema                    # Shows: tasks, spaces, folders, lists, comments, ...
-clickup schema tasks              # Shows: list, search, get, create, update, delete, ...
-clickup schema tasks.create       # Shows required and optional fields with types
-clickup schema tasks.list         # Shows available filter flags
+clickup schema task              # Shows: list, search, get, create, update, delete, ...
+clickup schema task.create       # Shows required and optional fields with types
+clickup schema task.list         # Shows available filter flags
 ```
 
 ### 14.28 Skill (Agent Skills)

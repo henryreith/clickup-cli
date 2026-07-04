@@ -130,7 +130,7 @@ describe('goal commands', () => {
       expect(mockClient.post).toHaveBeenCalledWith('/team/ws1/goal', {
         name: 'Launch v2',
         description: 'Ship it',
-        due_date: '1740787200000',
+        due_date: 1740787200000,
         color: '#FF0000',
       })
     })

@@ -5,7 +5,7 @@ import { getOutputOptions } from '../cli.js'
 import { resolveWorkspaceId } from '../config.js'
 import type { GoalListResponse, GoalResponse, KeyResultResponse } from '../types/goal.js'
 import { registerSchema } from '../schema.js'
-import { parseIntStrict, parseFloatStrict } from '../parse.js'
+import { parseIntStrict, parseFloatStrict, parseDateStrict } from '../parse.js'
 
 registerSchema('goal', 'list', 'List goals in a workspace', [
   { flag: '--workspace-id', type: 'string', required: true, description: 'Workspace ID' },
@@ -149,7 +149,7 @@ export function registerGoalCommands(
       if (!workspaceId) return
       const client = getClient()
       const body: Record<string, unknown> = { name: opts.name }
-      if (opts.dueDate !== undefined) body['due_date'] = opts.dueDate
+      if (opts.dueDate !== undefined) body['due_date'] = parseDateStrict(opts.dueDate, '--due-date')
       if (opts.description !== undefined) body['description'] = opts.description
       if (opts.multipleOwners) body['multiple_owners'] = true
       if (opts.owner.length) body['owners'] = opts.owner.map((id) => parseIntStrict(id, '--owner'))
@@ -170,7 +170,7 @@ export function registerGoalCommands(
       const client = getClient()
       const body: Record<string, unknown> = {}
       if (opts.name !== undefined) body['name'] = opts.name
-      if (opts.dueDate !== undefined) body['due_date'] = opts.dueDate
+      if (opts.dueDate !== undefined) body['due_date'] = parseDateStrict(opts.dueDate, '--due-date')
       if (opts.description !== undefined) body['description'] = opts.description
       if (opts.color !== undefined) body['color'] = opts.color
       await client.put(`/goal/${goalId}`, body)

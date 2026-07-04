@@ -45,7 +45,7 @@ clickup task update <task-id> --priority 2 --assignee-add 112233 --status "to do
 clickup tag add --task-id <task-id> --name "bug"
 
 # Set a due date if time-sensitive
-clickup task update <task-id> --due-date <timestamp-ms>
+clickup task update <task-id> --due-date <date>   # Unix ms, ISO 8601, or relative like "3d", "friday"
 ```
 
 ### Step 4: Route to appropriate lists (optional)

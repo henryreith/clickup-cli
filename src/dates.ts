@@ -1,5 +1,6 @@
-const RELATIVE_OFFSET_RE = /^([+-]\d+)([dwmh])$/
+const RELATIVE_OFFSET_RE = /^([+-]?\d+)([dwmh])$/
 const UNIX_MS_RE = /^\d{13,}$/
+const UNIX_SECONDS_RE = /^\d{10}$/
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/
 
@@ -12,6 +13,11 @@ export function parseDate(input: string): number {
   // Unix ms passthrough
   if (UNIX_MS_RE.test(raw)) {
     return parseInt(raw, 10)
+  }
+
+  // Unix seconds (10 digits covers 2001-2286, so unambiguous)
+  if (UNIX_SECONDS_RE.test(raw)) {
+    return parseInt(raw, 10) * 1000
   }
 
   // Named relative dates
@@ -41,18 +47,16 @@ export function parseDate(input: string): number {
     return now.getTime() + ms
   }
 
-  // Named day: "next monday", "next friday"
-  if (lower.startsWith('next ')) {
-    const dayName = lower.slice(5)
-    const dayIndex = DAY_NAMES.indexOf(dayName as typeof DAY_NAMES[number])
-    if (dayIndex !== -1) {
-      const today = now.getDay()
-      let daysAhead = dayIndex - today
-      if (daysAhead <= 0) daysAhead += 7
-      const target = startOfDay(now)
-      target.setDate(target.getDate() + daysAhead)
-      return target.getTime()
-    }
+  // Named day: "friday", "next monday" (both mean the next occurrence)
+  const dayName = lower.startsWith('next ') ? lower.slice(5) : lower
+  const dayIndex = DAY_NAMES.indexOf(dayName as typeof DAY_NAMES[number])
+  if (dayIndex !== -1) {
+    const today = now.getDay()
+    let daysAhead = dayIndex - today
+    if (daysAhead <= 0) daysAhead += 7
+    const target = startOfDay(now)
+    target.setDate(target.getDate() + daysAhead)
+    return target.getTime()
   }
 
   // ISO 8601 date only

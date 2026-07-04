@@ -27,6 +27,13 @@ clickup schema <resource>.<action>     # Show required/optional fields
 clickup <resource> <action> --help     # Full help text
 ```
 
+Agents without a skill-loading system (any platform other than Claude Code) can read every skill in this table directly from the CLI:
+
+```bash
+clickup skill list                     # All available skills
+clickup skill show <name>              # Print a skill's full contents (e.g. clickup-tasks)
+```
+
 ## Sub-Skills (load when needed)
 
 | Skill | What it covers |

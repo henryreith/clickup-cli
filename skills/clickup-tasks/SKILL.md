@@ -1,7 +1,7 @@
 ---
 name: clickup-tasks
 description: Creates, updates, searches, and manages ClickUp tasks, subtasks, checklists, dependencies, and attachments. Use when the user asks about tasks, wants to create or find work items, manage subtasks, add checklists, set dependencies, or upload files to tasks.
-allowed-tools: Bash(clickup task *), Bash(clickup checklist *), Bash(clickup dependency *), Bash(clickup relation *), Bash(clickup attachment *), Bash(clickup schema tasks*), Bash(clickup schema checklist*)
+allowed-tools: Bash(clickup task *), Bash(clickup checklist *), Bash(clickup dependency *), Bash(clickup relation *), Bash(clickup attachment *), Bash(clickup schema task*), Bash(clickup schema checklist*)
 ---
 
 # ClickUp Tasks
@@ -46,6 +46,8 @@ clickup task update <task-id> [--name <name>] [--description <text>]
 ```
 
 Priority accepts both integers (`1`-`4`) and strings (`urgent`, `high`, `normal`, `low`). Mapping: urgent=1, high=2, normal=3, low=4.
+
+`--due-date` and `--start-date` accept Unix timestamps (ms or seconds), ISO 8601 dates (`2026-07-10`), or relative dates (`tomorrow`, `3d`, `friday`, `next monday`).
 
 ### Delete a task
 ```bash
@@ -104,7 +106,11 @@ clickup relation remove --task-id <id> --links-to <id>
 
 ```bash
 clickup attachment upload --task-id <id> --file <path> [--filename <name>]
+clickup attachment list --task-id <id>
+clickup attachment download --task-id <id> --attachment-id <id> [--output <path>] [--force]
 ```
+
+`attachment download` refuses to overwrite an existing file unless `--force` is passed.
 
 ## Common Patterns
 
@@ -132,7 +138,7 @@ clickup chat send --channel-id <id> --message "$(clickup task list --list-id <id
 ## Discovery
 
 ```bash
-clickup schema tasks              # List all task actions
-clickup schema tasks.create       # Show create fields
-clickup schema tasks.list         # Show list filter flags
+clickup schema task              # List all task actions
+clickup schema task.create       # Show create fields
+clickup schema task.list         # Show list filter flags
 ```

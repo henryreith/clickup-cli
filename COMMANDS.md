@@ -261,7 +261,7 @@ clickup list remove-task <list-id> --task-id <id>
 | `--archived` | Include archived lists |
 | `--name <name>` | List name |
 | `--content <desc>` | List description |
-| `--due-date <ts>` | Due date (Unix ms, ISO 8601, or relative like `+3d`, `tomorrow`) |
+| `--due-date <ts>` | Due date (Unix ms/seconds, ISO 8601, or relative like `3d`, `friday`, `tomorrow`) |
 | `--priority <n>` | Priority level: 1 (urgent) to 4 (low) |
 | `--status <s>` | Default status for new tasks |
 | `--unset-status` | Remove the default status from the list |
@@ -465,8 +465,8 @@ clickup task create --list-id <id> --name <name>
 | `--markdown-description <md>` | string | Description as Markdown (overrides `--description`) |
 | `--status <s>` | string | Initial status name |
 | `--priority <1-4>` | int | 1=urgent, 2=high, 3=normal, 4=low |
-| `--due-date <date>` | date | Due date (Unix ms, ISO 8601, or relative like `+3d`, `tomorrow`) |
-| `--start-date <date>` | int (ms) | Start date as Unix timestamp in milliseconds |
+| `--due-date <date>` | date | Due date (Unix ms/seconds, ISO 8601, or relative like `3d`, `friday`, `tomorrow`) |
+| `--start-date <date>` | date | Start date (Unix ms/seconds, ISO 8601, or relative like `3d`, `friday`, `tomorrow`) |
 | `--assignee <id>...` | int[] | One or more user IDs to assign |
 | `--tag <name>...` | string[] | One or more tag names to apply |
 | `--time-estimate <ms>` | int | Time estimate in milliseconds |
@@ -518,8 +518,8 @@ clickup task update <task-id>
 | `--description <desc>` | string | Replace description (plain text) |
 | `--status <s>` | string | New status name |
 | `--priority <1-4>` | int | New priority level |
-| `--due-date <date>` | int (ms) | New due date timestamp |
-| `--start-date <date>` | int (ms) | New start date timestamp |
+| `--due-date <date>` | date | New due date (Unix ms/seconds, ISO 8601, or relative like `3d`, `friday`, `tomorrow`) |
+| `--start-date <date>` | date | New start date (Unix ms/seconds, ISO 8601, or relative like `3d`, `friday`, `tomorrow`) |
 | `--time-estimate <ms>` | int | New time estimate in milliseconds |
 | `--assignee-add <id>...` | int[] | Add assignees without replacing existing ones |
 | `--assignee-remove <id>...` | int[] | Remove specific assignees |
@@ -845,7 +845,7 @@ clickup time rename-tag --workspace-id <id> --name <name> --new-name <name>
 | `--start <ts>` | int (ms) | **Required.** Start time as Unix timestamp in milliseconds |
 | `--description <desc>` | string | Note or description for the time entry |
 | `--assignee <id>` | int | User ID to log time for (defaults to authenticated user) |
-| `--billable <bool>` | bool | Mark the entry as billable |
+| `--billable <bool>` | bool | Mark the entry as billable (`true` or `false` only; anything else exits 2) |
 | `--tag <name>...` | string[] | One or more time tracking tags |
 
 **Destructive:** `time delete` and `field remove` follow the standard `--confirm` pattern: prompt in TTY mode, require `--confirm` otherwise.
@@ -1355,13 +1355,13 @@ clickup schema <resource>.<action>
 clickup schema
 
 # See what you can do with tasks
-clickup schema tasks
+clickup schema task
 
 # Get the exact fields needed to create a task
-clickup schema tasks.create
+clickup schema task.create
 
 # Machine-readable output for agents
-clickup schema tasks.create --format json
+clickup schema task.create --format json
 ```
 
 ---
@@ -1424,7 +1424,7 @@ The ClickUp CLI is also a Claude Code plugin. Installing it as a plugin gives Cl
 /plugin marketplace add henryreith/clickup-cli
 
 # Install the plugin
-/plugin install clickup@clickup-cli
+/plugin install clickup@clickup-agent-cli
 
 # Skills are now available as /clickup:skill-name
 /clickup:weekly-review workspace-id-here
@@ -1447,7 +1447,7 @@ import { query } from "@anthropic-ai/claude-agent-sdk";
 for await (const message of query({
   prompt: "Create a ClickUp task for the login bug",
   options: {
-    plugins: [{ type: "local", path: "./node_modules/clickup-cli" }],
+    plugins: [{ type: "local", path: "./node_modules/clickup-agent-cli" }],
     allowedTools: ["Skill", "Bash"],
     settingSources: ["project"]
   }
@@ -1463,7 +1463,7 @@ from claude_agent_sdk import query, ClaudeAgentOptions
 async for message in query(
     prompt="Create a ClickUp task for the login bug",
     options=ClaudeAgentOptions(
-        plugins=[{"type": "local", "path": "./node_modules/clickup-cli"}],
+        plugins=[{"type": "local", "path": "./node_modules/clickup-agent-cli"}],
         allowed_tools=["Skill", "Bash"],
         setting_sources=["project"]
     ),
@@ -1475,11 +1475,16 @@ async for message in query(
 
 ```bash
 # Install the CLI globally
-npm install -g clickup-cli
+npm install -g clickup-agent-cli
+
+# Authenticate non-interactively (env var or --token-file)
+export CLICKUP_API_TOKEN=pk_your_token
+clickup config validate
 
 # Agents discover skills at runtime
 clickup skill list
-clickup skill show clickup-tasks
+clickup skill show clickup        # root skill: index of everything
+clickup skill show clickup-tasks  # per-resource command reference
 
 # Agents execute commands via bash
 clickup task list --list-id abc123 --format json
@@ -1493,11 +1498,20 @@ These flags apply to all commands.
 
 | Flag | Description |
 |------|-------------|
-| `--output <format>` | Output format: `table` (default), `json`, `yaml` |
+| `--format <fmt>` | Output format: `table` (default in TTY), `json` (default when piped), `csv`, `tsv`, `quiet`, `id`, `md` |
+| `--token <token>` | API token (overrides all other token sources) |
+| `--token-file <path>` | Read the API token from a file |
+| `--profile <name>` | Use a named profile (key, workspace name, or nickname) |
+| `--workspace-id <id>` | Workspace ID |
+| `--fields <fields>` | Show only these fields (comma-separated) |
+| `--filter <key=value>` | Client-side row filter |
+| `--sort <field[:asc\|:desc]>` | Sort output rows |
+| `--limit <n>` | Limit output rows |
 | `--no-color` | Disable colored output |
-| `--quiet` | Suppress all output except errors |
+| `--no-header` | Omit column headers |
+| `--verbose` | Show request details |
 | `--debug` | Print HTTP request/response details |
-| `--config <path>` | Use an alternate config file path |
+| `--dry-run` | Print the request without sending it |
 
 ---
 
@@ -1522,3 +1536,6 @@ All of the following commands require the `--confirm` flag to prevent accidental
 | `group delete` | User group |
 | `guest remove` | Guest workspace access |
 | `webhook delete` | Webhook registration |
+| `task bulk-delete` | Multiple tasks at once |
+| `time delete` | Time entry |
+| `field remove` | Custom field value on a task |

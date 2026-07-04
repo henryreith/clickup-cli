@@ -25,7 +25,7 @@ export function parseDateStrict(value: string, flag: string): number {
   try {
     return parseDate(value)
   } catch {
-    fail(`${flag} must be a date (ISO 8601, relative like +3d, or Unix ms), got "${value}"`)
+    fail(`${flag} must be a date (ISO 8601, relative like 3d or friday, or a Unix timestamp), got "${value}"`)
   }
 }
 

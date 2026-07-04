@@ -112,7 +112,7 @@ import { query } from "@anthropic-ai/claude-agent-sdk";
 for await (const message of query({
   prompt: "Create a task for the login bug fix and assign to the backend team",
   options: {
-    plugins: [{ type: "local", path: "./node_modules/clickup-cli" }],
+    plugins: [{ type: "local", path: "./node_modules/clickup-agent-cli" }],
     allowedTools: ["Skill", "Bash"],
     settingSources: ["project"]
   }
@@ -133,7 +133,7 @@ clickup skill show clickup
 clickup skill show clickup-tasks
 
 # Or asks the CLI what fields are needed (~50 tokens in response)
-clickup schema tasks.create
+clickup schema task.create
 
 # For complex workflows, load a recipe skill
 clickup skill show clickup-weekly-review
@@ -180,10 +180,33 @@ This creates `/marketing-weekly` alongside the built-in `/clickup:*` skills.
 | Platform | How to use |
 |----------|-----------|
 | Claude Code | Plugin via marketplace (see above) |
-| Claude Agent SDK | `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]` |
+| Claude Agent SDK | `plugins: [{ type: "local", path: "./node_modules/clickup-agent-cli" }]` |
 | Gemini CLI | `npm install -g clickup-agent-cli`, read skills via `clickup skill show` |
 | OpenAI Codex | `npm install -g clickup-agent-cli`, execute commands via bash |
 | Custom agents | `clickup skill list` for discovery, `clickup schema` for field info |
+
+### Bootstrap From Any Agent
+
+Any agent that can run shell commands can set up and use the CLI in five steps, no plugin system required:
+
+```bash
+# 1. Install
+npm install -g clickup-agent-cli
+
+# 2. Authenticate non-interactively (env var, or --token-file / --token per call)
+export CLICKUP_API_TOKEN=pk_your_token
+
+# 3. Verify auth and workspace
+clickup config validate
+
+# 4. Discover capabilities: the root skill indexes everything
+clickup skill show clickup          # start here (~150 tokens)
+clickup skill list                  # all 25 skills
+clickup skill show clickup-tasks    # per-resource command reference
+
+# 5. Discover exact fields before calling a command
+clickup schema task.create
+```
 
 ### Agent-Friendly Design
 
@@ -199,10 +222,10 @@ This creates `/marketing-weekly` alongside the built-in `/clickup:*` skills.
 
 ```bash
 # Discover what's available
-clickup schema tasks
+clickup schema task
 
 # Check what fields task create needs
-clickup schema tasks.create --format json
+clickup schema task.create --format json
 
 # Create a task (JSON output automatic in non-TTY)
 clickup task create --list-id 998877 --name "Review PR" --priority 2

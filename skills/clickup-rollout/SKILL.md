@@ -76,8 +76,8 @@ For a task template result, set assignees, dates, and custom fields:
 # Assign team members
 clickup task update "$TASK_ID" --assignee-add <user-id>
 
-# Set start and due dates (Unix milliseconds)
-clickup task update "$TASK_ID" --start-date <ms> --due-date <ms>
+# Set start and due dates (Unix ms, ISO 8601, or relative like "3d", "friday")
+clickup task update "$TASK_ID" --start-date <date> --due-date <date>
 
 # Fill in custom fields
 clickup field set --task-id "$TASK_ID" --field-id <field-id> --value "<value>"
