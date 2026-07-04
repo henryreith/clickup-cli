@@ -85,6 +85,8 @@ describe('skill commands', () => {
       expect(parsed.name).toBe('clickup')
       expect(parsed.type).toBe('root')
       expect(parsed.frontmatter).toBeTruthy()
+      // Agents read skills through JSON mode; the body must be included
+      expect(parsed.content).toContain('clickup skill show')
     })
 
     it('errors for unknown skill', async () => {

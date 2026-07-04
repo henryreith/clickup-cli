@@ -170,13 +170,14 @@ export function registerSkillCommands(program: Command): void {
       const format = outputOpts.format ?? (process.stdout.isTTY ? 'table' : 'json')
 
       if (format === 'json') {
-        const { frontmatter } = parseFrontmatter(result.content)
+        const { frontmatter, body } = parseFrontmatter(result.content)
         const output = {
           name: frontmatter['name'] || name,
           description: frontmatter['description'] || '',
           type: classifySkill(frontmatter),
           path: result.skillDir,
           frontmatter,
+          content: body,
         }
         process.stdout.write(JSON.stringify(output, null, 2) + '\n')
         return
