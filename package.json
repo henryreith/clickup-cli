@@ -1,7 +1,7 @@
 {
   "name": "clickup-agent-cli",
   "version": "0.5.1",
-  "description": "CLI covering the entire ClickUp API v2 surface",
+  "description": "Zero-overhead ClickUp CLI for AI agents, shell scripts, and automation. Full ClickUp API v2 coverage with 31 bundled agent skills.",
   "type": "module",
   "bin": {
     "clickup": "dist/clickup.js"
@@ -9,7 +9,8 @@
   "files": [
     "dist",
     "skills",
-    ".claude-plugin"
+    ".claude-plugin",
+    "AGENTS.md"
   ],
   "engines": {
     "node": ">=22.0.0"

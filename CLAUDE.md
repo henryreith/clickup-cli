@@ -175,7 +175,7 @@ This file is the authoritative project guide. Read it at the start of every sess
 - Both `.claude-plugin/` and `skills/` must be in the npm package `files` array
 - Users install via marketplace: `/plugin marketplace add henryreith/clickup-cli`
 - Agent SDK loads via: `plugins: [{ type: "local", path: "./node_modules/clickup-cli" }]`
-- After npm publish, submit to official Anthropic marketplace via claude.ai/settings/plugins/submit
+- Community marketplace submission (individual authors): platform.claude.com/plugins/submit -- run `claude plugin validate .` first (same check the form runs). The official Anthropic marketplace is curated via partner contact only.
 
 ## Key Design Decisions
 

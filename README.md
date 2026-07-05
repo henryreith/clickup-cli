@@ -1,5 +1,11 @@
 # ClickUp CLI
 
+[![npm](https://img.shields.io/npm/v/clickup-agent-cli)](https://www.npmjs.com/package/clickup-agent-cli)
+[![node](https://img.shields.io/node/v/clickup-agent-cli)](https://nodejs.org)
+[![CI](https://github.com/henryreith/clickup-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/henryreith/clickup-cli/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/npm/l/clickup-agent-cli)](./LICENSE)
+[![Agent Skills](https://img.shields.io/badge/agent%20skills-31-blueviolet)](./skills)
+
 Zero-overhead CLI for the ClickUp API v2 -- for AI agents, scripts, and automation. Covers the entire API surface with all MCP capabilities and more.
 
 ## Why This Exists
@@ -187,7 +193,7 @@ This creates `/marketing-weekly` alongside the built-in `/clickup:*` skills.
 
 ### Bootstrap From Any Agent
 
-Any agent that can run shell commands can set up and use the CLI in five steps, no plugin system required:
+The repo and npm package ship an [AGENTS.md](./AGENTS.md) operating manual that agent platforms (Codex, Cursor, Gemini CLI, custom agents) pick up automatically. Any agent that can run shell commands can set up and use the CLI in five steps, no plugin system required:
 
 ```bash
 # 1. Install
