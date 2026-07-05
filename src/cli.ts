@@ -35,7 +35,7 @@ import { registerSkillCommands } from './commands/skill-cmd.js'
 import { registerChatCommands } from './commands/chat.js'
 import { intArg } from './parse.js'
 
-const VERSION = '0.5.1'
+const VERSION = '0.5.2'
 
 export function createProgram(): Command {
   const program = new Command()

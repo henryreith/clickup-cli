@@ -1,6 +1,6 @@
 {
   "name": "clickup-agent-cli",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Zero-overhead ClickUp CLI for AI agents, shell scripts, and automation. Full ClickUp API v2 coverage with 31 bundled agent skills.",
   "type": "module",
   "bin": {
